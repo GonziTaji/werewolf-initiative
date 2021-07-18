@@ -1,6 +1,21 @@
 import React from 'react';
+import { InitiativeFormData, Turn } from '../interfaces';
+import { TurnState } from '../types';
+import TurnElement from './turnElement';
 
-export default class InitiativeList extends React.Component<{}, InitiativeListState> {
+export interface InitiativeListState {
+    form: InitiativeFormData;
+    turnList: Turn[];
+    /** -1 if turns have not started */
+    turnIndex: number;
+    /** -1 if turns have not started */
+    roundIndex: number;
+}
+
+export default class InitiativeList extends React.Component<
+    {},
+    InitiativeListState
+> {
     constructor(props: any) {
         super(props);
 
@@ -9,29 +24,87 @@ export default class InitiativeList extends React.Component<{}, InitiativeListSt
                 characterName: '',
                 initiative: 0,
                 actions: 1,
+                entersActing: false,
             },
             turnList: [],
             turnIndex: -1,
             roundIndex: -1,
-        }
+        };
 
         // Event bindings for input handling
         this.addInputToList = this.addInputToList.bind(this);
         this.onChangeInitiative = this.onChangeInitiative.bind(this);
         this.onChangeCharacterName = this.onChangeCharacterName.bind(this);
         this.onChangeActions = this.onChangeActions.bind(this);
+        this.onChangeEntersActing = this.onChangeEntersActing.bind(this);
         this.formOnKeyDown = this.formOnKeyDown.bind(this);
 
         // Event bindings for turn system
-        this.nextTurn = this.nextTurn.bind(this);
-        this.previousTurn = this.previousTurn.bind(this);
-        this.useSavedTurn = this.useSavedTurn.bind(this);
+        this.setPreviousState = this.setPreviousState.bind(this);
     }
 
     style = {
         container: {
-            'max-width': '600px',
-            'margin': 'auto',
+            maxWidth: '600px',
+            margin: 'auto',
+        },
+    };
+
+    characterNameInput: HTMLInputElement | null = null;
+
+    previousTurnStates: InitiativeListState[] = [];
+
+    componentDidUpdate(_prevProps: any, prevState: InitiativeListState) {
+        if (prevState.turnIndex !== this.state.turnIndex) {
+            this.previousTurnStates.push(prevState);
+        }
+    }
+
+    componentDidMount() {
+        // to debug
+        this.setState({
+            form: {
+                characterName: '',
+                initiative: 0,
+                actions: 1,
+                entersActing: false,
+            },
+            turnList: [
+                {
+                    characterName: 'personaje 2',
+                    initiative: 20,
+                    actions: 1,
+                    turnState: TurnState.WAITING,
+                    actionsUsed: 0,
+                },
+                {
+                    characterName: 'personaje 3',
+                    initiative: 13,
+                    actions: 1,
+                    turnState: TurnState.WAITING,
+                    actionsUsed: 0,
+                },
+                {
+                    characterName: 'personaje 1',
+                    initiative: 10,
+                    actions: 1,
+                    turnState: TurnState.WAITING,
+                    actionsUsed: 0,
+                },
+            ],
+            turnIndex: -1,
+            roundIndex: -1,
+        });
+    }
+
+    setPreviousState() {
+        const newState = this.previousTurnStates.pop();
+        console.log(this.previousTurnStates);
+        console.log(newState);
+        if (!newState) {
+            alert('No hay acciones que deshacer');
+        } else {
+            this.setState(newState);
         }
     }
 
@@ -47,7 +120,7 @@ export default class InitiativeList extends React.Component<{}, InitiativeListSt
             characterName: this.state.form.characterName,
             initiative: this.state.form.initiative,
             actions: this.state.form.actions,
-            turnState: 'WAITING',
+            turnState: TurnState.WAITING,
             actionsUsed: 0,
         };
 
@@ -55,42 +128,53 @@ export default class InitiativeList extends React.Component<{}, InitiativeListSt
             form: {
                 characterName: '',
                 initiative: 0,
-                actions: 1
+                actions: 1,
+                entersActing: false,
             },
-            turnList: this.orderByInitiative([...this.state.turnList, newTurn])
+            turnList: this.orderByInitiative([...this.state.turnList, newTurn]),
         });
+
+        this.characterNameInput?.focus();
     }
 
     onChangeInitiative(e: React.ChangeEvent<HTMLInputElement>) {
         this.setState({
             form: {
                 ...this.state.form,
-                initiative: parseInt(e.target.value)
-            }
-        })
+                initiative: parseInt(e.target.value),
+            },
+        });
     }
 
-    onChangeCharacterName(e: any) {
+    onChangeCharacterName(e: React.ChangeEvent<HTMLInputElement>) {
         this.setState({
             form: {
                 ...this.state.form,
-                characterName: e.target.value
-            }
-        })
+                characterName: e.currentTarget.value,
+            },
+        });
     }
 
-    onChangeActions(e: any) {
+    onChangeActions(e: React.ChangeEvent<HTMLInputElement>) {
         this.setState({
             form: {
                 ...this.state.form,
-                characterName: e.target.value
-            }
-        })
+                characterName: e.currentTarget.value,
+            },
+        });
+    }
+
+    onChangeEntersActing(e: React.ChangeEvent<HTMLInputElement>) {
+        this.setState({
+            form: {
+                ...this.state.form,
+                entersActing: e.currentTarget.checked,
+            },
+        });
     }
 
     orderByInitiative(input: Turn[]) {
-        console.log(input);
-        return input.sort((a, b) => a.initiative < b.initiative ? 1 : -1);
+        return input.sort((a, b) => (a.initiative < b.initiative ? 1 : -1));
     }
 
     formOnKeyDown(e: React.KeyboardEvent) {
@@ -101,7 +185,7 @@ export default class InitiativeList extends React.Component<{}, InitiativeListSt
 
     // ---
     // Turn handling methods
-    nextTurn(e: React.MouseEvent) {
+    old_nextTurn(e: React.MouseEvent) {
         const skipped = e.currentTarget.id === 'btn-skip';
 
         let turnIndex = this.state.turnIndex + 1;
@@ -111,14 +195,14 @@ export default class InitiativeList extends React.Component<{}, InitiativeListSt
             roundIndex++;
             turnIndex = 0;
         }
-    
+
         const turns = this.state.turnList.map((t, i) => {
             if (i === this.state.turnIndex) {
-                t.turnState = skipped ? 'HOLD' : 'WAITING'
+                t.turnState = skipped ? TurnState.HOLD : TurnState.WAITING;
             }
 
             if (i === turnIndex) {
-                t.turnState = 'ACTING';
+                t.turnState = TurnState.ACTING;
             }
 
             return t;
@@ -131,22 +215,64 @@ export default class InitiativeList extends React.Component<{}, InitiativeListSt
         });
     }
 
-    previousTurn() {
+    finishTurn(
+        index: number,
+        finishingTurnState:
+            | TurnState.WAITING
+            | TurnState.HOLD = TurnState.WAITING
+    ) {
+        const turnList = this.state.turnList;
 
+        turnList[index].turnState = finishingTurnState;
+
+        this.setState({ turnList }, () => {
+            if (turnList.filter(t => t.turnState === TurnState.ACTING).length === 0) {
+                this.nextTurn()
+            }
+        })
     }
 
-    useSavedTurn(e: React.MouseEvent) {
-        const index = e.currentTarget.getAttribute('data-index');
+    skipTurn(index: number) {
+        const turns = this.state.turnList;
+
+        turns[index].turnState = TurnState.WAITING;
+    }
+
+    nextTurn() {
+        let turnIndex = this.state.turnIndex + 1;
+        let roundIndex = this.state.roundIndex;
+
+        if (roundIndex === -1 || turnIndex === this.state.turnList.length) {
+            roundIndex++;
+            turnIndex = 0;
+        }
 
         const turns = this.state.turnList.map((t, i) => {
-            if (i.toString() === index) {
-                t.turnState = 'WAITING';
+            if (i === turnIndex) {
+                console.log('turnIndex', turnIndex);
+                t.turnState = TurnState.ACTING;
             }
+
             return t;
-        })
+        });
 
         this.setState({
-            turnList: turns
+            turnList: turns,
+            roundIndex,
+            turnIndex,
+        });
+    }
+
+    useSavedTurn(index: number) {
+        const turns = this.state.turnList.map((t, i) => {
+            if (i === index) {
+                t.turnState = TurnState.ACTING;
+            }
+            return t;
+        });
+
+        this.setState({
+            turnList: turns,
         });
     }
 
@@ -156,15 +282,24 @@ export default class InitiativeList extends React.Component<{}, InitiativeListSt
                 <form onKeyDown={this.formOnKeyDown}>
                     <div>
                         <label htmlFor="character-name"> Personaje </label>
-                        <input className="form-control" type="text" id="character-name"
+                        <input
+                            className="form-control"
+                            type="text"
+                            id="character-name"
                             value={this.state.form.characterName}
                             onChange={this.onChangeCharacterName}
+                            ref={(inputEl) =>
+                                (this.characterNameInput = inputEl)
+                            }
                         />
                     </div>
 
                     <div>
                         <label htmlFor="initiative"> Iniciativa </label>
-                        <input className="form-control" type="number" id="initiative"
+                        <input
+                            className="form-control"
+                            type="number"
+                            id="initiative"
                             value={this.state.form.initiative}
                             onChange={this.onChangeInitiative}
                         />
@@ -172,86 +307,68 @@ export default class InitiativeList extends React.Component<{}, InitiativeListSt
 
                     <div>
                         <label htmlFor="actions"> Acciones </label>
-                        <input className="form-control" type="number" id="actions"
+                        <input
+                            className="form-control"
+                            type="number"
+                            id="actions"
                             value={this.state.form.actions}
                             onChange={this.onChangeActions}
                         />
                     </div>
 
-                    <br/>
+                    <div className="form-check">
+                        <label htmlFor="enters-acting"> Entra actuando </label>
+                        <input
+                            className="form-check-input"
+                            type="checkbox"
+                            id="enters-acting"
+                            checked={this.state.form.entersActing}
+                            onChange={this.onChangeEntersActing}
+                        />
+                    </div>
 
-                    <button className="btn btn-primary" type="button" onClick={this.addInputToList}>Agregar</button>
+                    <br />
+
+                    <button
+                        className="btn btn-primary"
+                        type="button"
+                        onClick={this.addInputToList}
+                    >
+                        Agregar
+                    </button>
                 </form>
 
                 {/* Turn controls */}
-                {
-                    <button onClick={this.previousTurn} className="btn btn-warning" disabled={
-                        this.state.roundIndex === -1 || (this.state.roundIndex === 0 && this.state.turnIndex === 0)
-                    }>
-                        Turno anterior
-                    </button>   
-                }
+                {this.state.roundIndex !== -1 && (
+                    <button
+                        onClick={this.setPreviousState}
+                        className="btn btn-warning"
+                        disabled={this.previousTurnStates.length === 0}
+                    >
+                        Deshacer acción
+                    </button>
+                )}
 
-                <button onClick={this.nextTurn} className="btn btn-primary">{
-                    this.state.roundIndex === -1 ? 'Comenzar' : 'Siguiente turno'
-                }</button>
-
-                <button onClick={this.nextTurn} id="btn-skip" className="btn btn-success" disabled={
-                    this.state.turnIndex === -1
-                }>
-                    Guardar turno
-                </button>
+                {this.state.roundIndex === -1 && (
+                    <button
+                        onClick={(e) => this.nextTurn()}
+                        className="btn btn-success"
+                    >
+                        Comenzar
+                    </button>
+                )}
 
                 {/* Turn List */}
                 {this.state.turnList.map((item, i) => (
-                    <div className="row">
-                        <div className="col">
-                            {item.initiative}
-                        </div>
-
-                        <div className="col">
-                            {item.characterName.toUpperCase()}
-                        </div>
-
-                        <div className="col" data-index={i}>
-                            {item.turnState} 
-                            {item.turnState === 'HOLD' &&
-                                <button className="btn btn-primary btn-outline"
-                                    onClick={this.useSavedTurn}
-                                >
-                                    Usar Turno
-                                </button>
-                            }
-                        </div>
-
-                        <div className="col col-12">
-                            <small>Acciones {item.actions}</small>
-                        </div>
-                    </div>
+                    <TurnElement
+                        key={i}
+                        turn={item}
+                        useSavedTurn={this.useSavedTurn.bind(this, i)}
+                        holdTurn={this.finishTurn.bind(this, i, TurnState.HOLD)}
+                        finishTurn={this.finishTurn.bind(this, i, TurnState.WAITING)}
+                    ></TurnElement>
                 ))}
             </div>
         );
     }
 }
-
-interface InitiativeListState {
-    form: InitiativeFormData;
-    turnList: Turn[];
-    /** -1 if turns have not started */
-    turnIndex: number;
-    /** -1 if turns have not started */
-    roundIndex: number;
-}
-
-interface Turn extends InitiativeFormData {
-    turnState: TurnState;
-    actionsUsed: number;
-}
-
-interface InitiativeFormData {
-    characterName: string;
-    initiative: number;
-    actions: number;
-}
-
-type TurnState = 'HOLD' | 'WAITING' | 'ACTING';
