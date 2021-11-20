@@ -1,4 +1,4 @@
-import React from 'react';
+ import React, { CSSProperties } from 'react';
 import { InitiativeFormData, Turn } from '../interfaces';
 import { TurnState } from '../types';
 import TurnElement from './turnElement';
@@ -38,27 +38,19 @@ export default class InitiativeList extends React.Component<
         this.onChangeActions = this.onChangeActions.bind(this);
         this.onChangeEntersActing = this.onChangeEntersActing.bind(this);
         this.formOnKeyDown = this.formOnKeyDown.bind(this);
+        this.goNextActorTurn = this.goNextActorTurn.bind(this);
 
-        // Event bindings for turn system
-        this.setPreviousState = this.setPreviousState.bind(this);
     }
 
-    style = {
+    style: {[key: string]: CSSProperties} = {
         container: {
-            maxWidth: '600px',
-            margin: 'auto',
         },
+        card: {
+            marginTop: 20
+        }
     };
 
     characterNameInput: HTMLInputElement | null = null;
-
-    previousTurnStates: InitiativeListState[] = [];
-
-    componentDidUpdate(_prevProps: any, prevState: InitiativeListState) {
-        if (prevState.turnIndex !== this.state.turnIndex) {
-            this.previousTurnStates.push(prevState);
-        }
-    }
 
     componentDidMount() {
         // to debug
@@ -76,6 +68,7 @@ export default class InitiativeList extends React.Component<
                     actions: 1,
                     turnState: TurnState.WAITING,
                     actionsUsed: 0,
+                    incapacitated: false,
                 },
                 {
                     characterName: 'personaje 3',
@@ -83,6 +76,7 @@ export default class InitiativeList extends React.Component<
                     actions: 1,
                     turnState: TurnState.WAITING,
                     actionsUsed: 0,
+                    incapacitated: false,
                 },
                 {
                     characterName: 'personaje 1',
@@ -90,22 +84,12 @@ export default class InitiativeList extends React.Component<
                     actions: 1,
                     turnState: TurnState.WAITING,
                     actionsUsed: 0,
+                    incapacitated: false,
                 },
             ],
             turnIndex: -1,
             roundIndex: -1,
         });
-    }
-
-    setPreviousState() {
-        const newState = this.previousTurnStates.pop();
-        console.log(this.previousTurnStates);
-        console.log(newState);
-        if (!newState) {
-            alert('No hay acciones que deshacer');
-        } else {
-            this.setState(newState);
-        }
     }
 
     // ---
@@ -120,8 +104,9 @@ export default class InitiativeList extends React.Component<
             characterName: this.state.form.characterName,
             initiative: this.state.form.initiative,
             actions: this.state.form.actions,
-            turnState: TurnState.WAITING,
+            turnState: this.state.form.entersActing ? TurnState.ACTING : TurnState.WAITING,
             actionsUsed: 0,
+            incapacitated: false,
         };
 
         this.setState({
@@ -185,36 +170,6 @@ export default class InitiativeList extends React.Component<
 
     // ---
     // Turn handling methods
-    old_nextTurn(e: React.MouseEvent) {
-        const skipped = e.currentTarget.id === 'btn-skip';
-
-        let turnIndex = this.state.turnIndex + 1;
-        let roundIndex = this.state.roundIndex;
-
-        if (roundIndex === -1 || turnIndex === this.state.turnList.length) {
-            roundIndex++;
-            turnIndex = 0;
-        }
-
-        const turns = this.state.turnList.map((t, i) => {
-            if (i === this.state.turnIndex) {
-                t.turnState = skipped ? TurnState.HOLD : TurnState.WAITING;
-            }
-
-            if (i === turnIndex) {
-                t.turnState = TurnState.ACTING;
-            }
-
-            return t;
-        });
-
-        this.setState({
-            turnList: turns,
-            roundIndex,
-            turnIndex,
-        });
-    }
-
     finishTurn(
         index: number,
         finishingTurnState:
@@ -225,11 +180,15 @@ export default class InitiativeList extends React.Component<
 
         turnList[index].turnState = finishingTurnState;
 
-        this.setState({ turnList }, () => {
-            if (turnList.filter(t => t.turnState === TurnState.ACTING).length === 0) {
-                this.nextTurn()
+        const callback = () => {
+            const { length: actingCount } = turnList.filter(t => t.turnState === TurnState.ACTING);
+
+            if (actingCount === 0) {
+                this.goNextActorTurn()
             }
-        })
+        }
+
+        this.setState({ turnList }, callback);
     }
 
     skipTurn(index: number) {
@@ -238,7 +197,11 @@ export default class InitiativeList extends React.Component<
         turns[index].turnState = TurnState.WAITING;
     }
 
-    nextTurn() {
+    goNextActorTurn() {
+        if (this.state.turnList.length === 0) {
+            return alert('No hay turnos disponibles');
+        }
+        console.log('goNextActorTurn');
         let turnIndex = this.state.turnIndex + 1;
         let roundIndex = this.state.roundIndex;
 
@@ -249,7 +212,6 @@ export default class InitiativeList extends React.Component<
 
         const turns = this.state.turnList.map((t, i) => {
             if (i === turnIndex) {
-                console.log('turnIndex', turnIndex);
                 t.turnState = TurnState.ACTING;
             }
 
@@ -266,7 +228,7 @@ export default class InitiativeList extends React.Component<
     useSavedTurn(index: number) {
         const turns = this.state.turnList.map((t, i) => {
             if (i === index) {
-                t.turnState = TurnState.ACTING;
+                t.turnState = TurnState.WAITING;
             }
             return t;
         });
@@ -276,98 +238,141 @@ export default class InitiativeList extends React.Component<
         });
     }
 
+    removeTurn(index: number) {
+        const { turnList } = this.state;
+
+        turnList.splice(index, 1);
+
+        this.setState({ turnList });
+    }
+
+    incapacitateCharacter(index: number) {
+        const { turnList } = this.state;
+
+        const turnToIncapacitate = turnList[index];
+
+        if (turnToIncapacitate) {
+            turnToIncapacitate.incapacitated = true;
+
+            const callback = () => {
+                if (turnToIncapacitate.turnState === TurnState.ACTING) {
+                    this.finishTurn(index);
+                }
+            }
+
+            this.setState({ turnList }, callback);
+        } else {
+            alert('Algo salio mal: Turno no encontrado. Inténtelo nuevamente');
+        }
+    }
+
+    capacitateIncapacitated(index: number) {
+        const { turnList } = this.state;
+
+        const turnToCapacitate = turnList[index];
+
+        if (turnToCapacitate) {
+            turnToCapacitate.incapacitated = false;
+
+            this.setState({ turnList });
+        }
+    }
+
     render() {
         return (
-            <div style={this.style.container}>
-                <form onKeyDown={this.formOnKeyDown}>
-                    <div>
-                        <label htmlFor="character-name"> Personaje </label>
-                        <input
-                            className="form-control"
-                            type="text"
-                            id="character-name"
-                            value={this.state.form.characterName}
-                            onChange={this.onChangeCharacterName}
-                            ref={(inputEl) =>
-                                (this.characterNameInput = inputEl)
-                            }
-                        />
+            <div className="container" style={this.style.container}>
+                <div className="card" style={this.style.card}>
+                    <div className="card-header">
+                        Ingreso de personaje
                     </div>
 
-                    <div>
-                        <label htmlFor="initiative"> Iniciativa </label>
-                        <input
-                            className="form-control"
-                            type="number"
-                            id="initiative"
-                            value={this.state.form.initiative}
-                            onChange={this.onChangeInitiative}
-                        />
+                    <div className="card-body">
+                        <form onKeyDown={this.formOnKeyDown}>
+                            <label htmlFor="character-name"> Personaje </label>
+                            <input
+                                className="form-control"
+                                type="text"
+                                id="character-name"
+                                value={this.state.form.characterName}
+                                onChange={this.onChangeCharacterName}
+                                ref={(inputEl) =>
+                                    (this.characterNameInput = inputEl)
+                                }
+                            />
+
+                            <label htmlFor="initiative"> Iniciativa </label>
+                            <input
+                                className="form-control"
+                                type="number"
+                                id="initiative"
+                                value={this.state.form.initiative}
+                                onChange={this.onChangeInitiative}
+                            />
+
+                            <label htmlFor="actions"> Acciones </label>
+                            <input
+                                className="form-control"
+                                type="number"
+                                id="actions"
+                                value={this.state.form.actions}
+                                onChange={this.onChangeActions}
+                            />
+
+                            <div className="form-check">
+                                <label htmlFor="enters-acting"> Entra actuando </label>
+                                <input
+                                    className="form-check-input"
+                                    type="checkbox"
+                                    id="enters-acting"
+                                    checked={this.state.form.entersActing}
+                                    onChange={this.onChangeEntersActing}
+                                />
+                            </div>
+                        </form>
                     </div>
 
-                    <div>
-                        <label htmlFor="actions"> Acciones </label>
-                        <input
-                            className="form-control"
-                            type="number"
-                            id="actions"
-                            value={this.state.form.actions}
-                            onChange={this.onChangeActions}
-                        />
+                    <div className="card-footer d-flex justify-content-end">
+                        <button
+                            className="btn btn-primary"
+                            type="button"
+                            onClick={this.addInputToList}
+                        >
+                            Agregar
+                        </button>
+                    </div>
+                </div>
+
+                <div className="card" style={this.style.card}>
+                    <div className="card-header d-flex justify-content-between align-items-center">
+                        Turnos
+
+                        {/* Turn controls */}
+                        {this.state.roundIndex === -1 && (
+                            <button
+                                onClick={this.goNextActorTurn}
+                                className="btn btn-sm btn-link"
+                            >
+                                Comenzar
+                            </button>
+                        )}
                     </div>
 
-                    <div className="form-check">
-                        <label htmlFor="enters-acting"> Entra actuando </label>
-                        <input
-                            className="form-check-input"
-                            type="checkbox"
-                            id="enters-acting"
-                            checked={this.state.form.entersActing}
-                            onChange={this.onChangeEntersActing}
-                        />
+                    <div className="card-body">
+                        {/* Turn List */}
+                        {this.state.turnList.map((item, i) => (
+                            <TurnElement
+                                key={i}
+                                turn={item}
+                                useSavedTurn={this.useSavedTurn.bind(this, i)}
+                                holdTurn={this.finishTurn.bind(this, i, TurnState.HOLD)}
+                                finishTurn={this.finishTurn.bind(this, i, TurnState.WAITING)}
+                                removeTurn={this.removeTurn.bind(this, i)}
+                                incapacitate={this.incapacitateCharacter.bind(this, i, TurnState.WAITING)}
+                                capacitate={this.capacitateIncapacitated.bind(this,i)}
+                            ></TurnElement>
+                        ))}
                     </div>
-
-                    <br />
-
-                    <button
-                        className="btn btn-primary"
-                        type="button"
-                        onClick={this.addInputToList}
-                    >
-                        Agregar
-                    </button>
-                </form>
-
-                {/* Turn controls */}
-                {this.state.roundIndex !== -1 && (
-                    <button
-                        onClick={this.setPreviousState}
-                        className="btn btn-warning"
-                        disabled={this.previousTurnStates.length === 0}
-                    >
-                        Deshacer acción
-                    </button>
-                )}
-
-                {this.state.roundIndex === -1 && (
-                    <button
-                        onClick={(e) => this.nextTurn()}
-                        className="btn btn-success"
-                    >
-                        Comenzar
-                    </button>
-                )}
-
-                {/* Turn List */}
-                {this.state.turnList.map((item, i) => (
-                    <TurnElement
-                        key={i}
-                        turn={item}
-                        useSavedTurn={this.useSavedTurn.bind(this, i)}
-                        holdTurn={this.finishTurn.bind(this, i, TurnState.HOLD)}
-                        finishTurn={this.finishTurn.bind(this, i, TurnState.WAITING)}
-                    ></TurnElement>
-                ))}
+                </div>
             </div>
         );
     }

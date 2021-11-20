@@ -3,6 +3,7 @@ import { TurnState } from "./types";
 export interface Turn extends TurnData {
     turnState: TurnState;
     actionsUsed: number;
+    incapacitated: boolean;
 }
 
 export interface InitiativeFormData extends TurnData {

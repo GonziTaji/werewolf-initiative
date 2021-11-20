@@ -1,5 +1,5 @@
 export enum TurnState {
-    HOLD = 'Guardado',
-    WAITING = 'Esperando',
-    ACTING = 'Actuando',
+    'HOLD' = 'Guardado',
+    'WAITING' = 'Esperando',
+    'ACTING' = 'Actuando'
 }

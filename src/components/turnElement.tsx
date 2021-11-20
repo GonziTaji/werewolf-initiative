@@ -7,13 +7,16 @@ export default function TurnElement(props: {
     useSavedTurn: MouseEventHandler;
     holdTurn: MouseEventHandler;
     finishTurn: MouseEventHandler;
+    removeTurn: MouseEventHandler;
+    incapacitate: MouseEventHandler;
+    capacitate: MouseEventHandler;
 }) {
     const turn = props.turn;
 
     const turnStateColorClass = (() => {
         switch (turn.turnState) {
             case TurnState.ACTING:
-                return 'success';
+                return turn.incapacitated ? 'danger' : 'success';
 
             case TurnState.HOLD:
                 return 'primary';
@@ -26,48 +29,75 @@ export default function TurnElement(props: {
         }
     })();
 
+    const actionButtons = (() => {
+        switch (turn.turnState) {
+            case TurnState.ACTING:
+                return turn.incapacitated ?
+                <>
+                    <button className="btn btn-sm btn-success" onClick={props.capacitate}>
+                        Capacitar
+                    </button>
+
+                    <button className="btn btn-sm btn-primary" onClick={props.finishTurn}>
+                        Siguiente turno
+                    </button>
+                </>
+                :
+                <>
+                    <button
+                        className="btn btn-sm btn-primary"
+                        onClick={props.finishTurn}
+                    >
+                        Terminar
+                    </button>
+
+                    <button
+                        style={{ marginLeft: 10 }}
+                        className="btn btn-sm btn-secondary"
+                        onClick={props.holdTurn}
+                    >
+                        Guardar
+                    </button>
+                </>;
+
+            case TurnState.HOLD:
+                return (
+                    <button
+                        className="btn btn-sm btn-primary"
+                        onClick={props.useSavedTurn}
+                    >
+                        Actuar
+                    </button>
+                );
+        }
+    })();
+
+
     return (
-        <div className="list-group">
-            <div className="list-group-item d-flex align-items-center justify-content-between ">
-                <span>
-                    {turn.initiative < 10 && '0'}
-                    {turn.initiative}. {turn.characterName.toUpperCase()}
-                    <br />
-                    <small className="ms-4">Acciones {turn.actions}</small>
-                </span>
+        <div className={'alert alert-'+turnStateColorClass}>
+            <p>
+                {turn.initiative}. {turn.characterName.toUpperCase()} (Acciones: {turn.actions})
+            </p>
 
-                <span>
-                    {turn.turnState === TurnState.HOLD && (
-                        <button
-                            className="btn btn-primary btn-outline"
-                            onClick={props.useSavedTurn}
-                        >
-                            Actuar
-                        </button>
-                    )}
+            <div className="d-flex justify-content-between">
+                <div className="col col-auto">
+                    {actionButtons}
 
-                    {turn.turnState === TurnState.ACTING && (
-                        <button
-                            className="btn btn-success btn-outline"
-                            onClick={props.holdTurn}
-                        >
-                            Guardar Turno
-                        </button>
-                    )}
+                    <button
+                        style={{ marginLeft: 10 }}
+                        className="btn btn-sm btn-danger"
+                        onClick={props.incapacitate}
+                        disabled={turn.incapacitated}
+                    >
+                        { turn.incapacitated ? 'Incapacitado' : 'Incapacitar' }
+                    </button>
+                </div>
 
-                    {turn.turnState === TurnState.ACTING && (
-                        <button
-                            className="btn btn-primary btn-outline"
-                            onClick={props.finishTurn}
-                        >
-                            Terminar Turno
-                        </button>
-                    )}
-
+                <div className="col col-auto">
                     <div className={'badge bg-'+turnStateColorClass}>
                         {turn.turnState}
                     </div>
-                </span>
+                </div>
             </div>
         </div>
     );
