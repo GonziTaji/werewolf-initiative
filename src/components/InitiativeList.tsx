@@ -61,32 +61,7 @@ export default class InitiativeList extends React.Component<
                 actions: 1,
                 entersActing: false,
             },
-            turnList: [
-                {
-                    characterName: 'personaje 2',
-                    initiative: 20,
-                    actions: 1,
-                    turnState: TurnState.WAITING,
-                    actionsUsed: 0,
-                    incapacitated: false,
-                },
-                {
-                    characterName: 'personaje 3',
-                    initiative: 13,
-                    actions: 1,
-                    turnState: TurnState.WAITING,
-                    actionsUsed: 0,
-                    incapacitated: false,
-                },
-                {
-                    characterName: 'personaje 1',
-                    initiative: 10,
-                    actions: 1,
-                    turnState: TurnState.WAITING,
-                    actionsUsed: 0,
-                    incapacitated: false,
-                },
-            ],
+            turnList: [],
             turnIndex: -1,
             roundIndex: -1,
         });
