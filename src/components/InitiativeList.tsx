@@ -75,14 +75,36 @@ export default class InitiativeList extends React.Component<
             return;
         }
 
+        const newCharacterName = this.state.form.characterName;
+
         const newTurn: Turn = {
-            characterName: this.state.form.characterName,
+            characterName: newCharacterName,
             initiative: this.state.form.initiative,
             actions: this.state.form.actions,
             turnState: this.state.form.entersActing ? TurnState.ACTING : TurnState.WAITING,
             actionsUsed: 0,
             incapacitated: false,
         };
+
+        if (this.state.turnList.find(turn => turn.characterName === newCharacterName)) {
+            alert('Ya existe un personaje con otro nombre. Cámbielo e inténtelo nuevamente');
+            this.characterNameInput?.focus();
+            return;
+        }
+
+        
+        let turnList = [],
+            turnIndex = this.state.turnIndex;
+
+        if (turnIndex !== -1) {
+            turnList = this.orderByInitiative([...this.state.turnList, newTurn]);
+
+            const currentTurnCharacterName = this.state.turnList[turnIndex].characterName;
+
+            turnIndex = turnList.findIndex(t => t.characterName === currentTurnCharacterName);
+        } else {
+            turnList = this.orderByInitiative([...this.state.turnList, newTurn]);
+        }
 
         this.setState({
             form: {
@@ -91,7 +113,8 @@ export default class InitiativeList extends React.Component<
                 actions: 1,
                 entersActing: false,
             },
-            turnList: this.orderByInitiative([...this.state.turnList, newTurn]),
+            turnList,
+            turnIndex: turnIndex
         });
 
         this.characterNameInput?.focus();
@@ -119,7 +142,7 @@ export default class InitiativeList extends React.Component<
         this.setState({
             form: {
                 ...this.state.form,
-                characterName: e.currentTarget.value,
+                actions: parseInt(e.currentTarget.value),
             },
         });
     }
