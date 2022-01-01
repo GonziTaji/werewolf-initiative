@@ -1,4 +1,4 @@
-import React, { MouseEventHandler } from 'react';
+import React, { CSSProperties, MouseEventHandler, useRef } from 'react';
 import { Turn } from '../interfaces';
 import { TurnState } from '../types';
 
@@ -33,19 +33,33 @@ export default function TurnElement(props: {
         }
     })();
 
+    const buttonStyles: CSSProperties = {
+        // padding: '0.1rem',
+        borderRadius: 'unset',
+        borderColor: 'black',
+    }
+
     const buttons = {
         capacitar:
-            <button className="btn btn-sm btn-success" onClick={props.capacitate}>
+            <button
+                className="btn btn-sm btn-success"
+                style={buttonStyles}
+                onClick={props.capacitate}
+            >
                 Recapacitar
             </button>,
         terminarTurno:
-            <button className="btn btn-sm btn-primary" onClick={props.finishTurn}>
+            <button
+                className="btn btn-sm btn-primary"
+                style={buttonStyles}
+                onClick={props.finishTurn}
+            >
                 Siguiente turno
             </button>,
         guardarTurno:
             <button
-                style={{ marginLeft: 10 }}
                 className="btn btn-sm btn-secondary"
+                style={buttonStyles}
                 onClick={props.holdTurn}
             >
                 Guardar
@@ -53,10 +67,28 @@ export default function TurnElement(props: {
         usarTurno:
             <button
                 className="btn btn-sm btn-primary"
+                style={buttonStyles}
                 onClick={props.useSavedTurn}
             >
                 Actuar
-            </button>
+            </button>,
+        incapacitar:
+            <button
+                className="btn btn-sm btn-danger"
+                style={buttonStyles}
+                onClick={props.incapacitate}
+                disabled={turn.incapacitated}
+            >
+                { turn.incapacitated ? 'Incapacitado' : 'Incapacitar' }
+            </button>,
+        usarRabia:
+        <button
+            className="btn btn-sm btn-primary"
+            style={buttonStyles}
+            onClick={props.useSavedTurn}
+        >
+            Actuar
+        </button>,
     }
 
     const buttonsToRender: JSX.Element[] = []
@@ -64,11 +96,9 @@ export default function TurnElement(props: {
         case TurnState.ACTING:
             buttonsToRender.push(buttons.terminarTurno);
 
-            if (turn.incapacitated) {
-                buttonsToRender.push(buttons.capacitar);
-            } else {
+            if (!turn.incapacitated) {
                 buttonsToRender.push(buttons.guardarTurno)
-            }
+            } 
             break;
 
         case TurnState.HOLD:
@@ -76,9 +106,15 @@ export default function TurnElement(props: {
             break;
     }
 
+    if (turn.incapacitated) {
+        buttonsToRender.push(buttons.capacitar);
+    } else {
+        buttonsToRender.push(buttons.incapacitar);
+    }
+
     return (
-        <div className={'alert alert-'+turnStateColorClass}>
-            <div className='row'>
+        <div className={'p-1 alert alert-'+turnStateColorClass}>
+            <div className='row g-0'>
                 <div className='col'>
                     <span>
                         {turn.initiative}. {turn.characterName.toUpperCase()} &nbsp;
@@ -91,28 +127,13 @@ export default function TurnElement(props: {
                     </div>
                 </div>
             </div>
-            <p>
-            </p>
 
-            <div className="row">
-                { buttonsToRender.map(button => (
-                    <div className='col col-auto p-1'>
+            <div className="row g-0">
+                { buttonsToRender.map((button, i) => (
+                    <div key={i} className='col col-auto p-0'>
                         {button}
                     </div>
                 )) }
-
-                {/* { (!TurnState.ACTING) && */}
-                    <div className='col col-auto p-1'>
-                        <button
-                            style={{ marginLeft: 10 }}
-                            className="btn btn-sm btn-danger"
-                            onClick={props.incapacitate}
-                            disabled={turn.incapacitated}
-                        >
-                            { turn.incapacitated ? 'Incapacitado' : 'Incapacitar' }
-                        </button>
-                    </div>
-                {/* } */}
             </div>
         </div>
     );
