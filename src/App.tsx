@@ -1,12 +1,12 @@
 import './App.scss';
-import InitiativeList from './components/InitiativeList';
+import TurnList from './components/turnList';
 
 function App() {
-  return (
-    <div className="App">
-      <InitiativeList></InitiativeList>
-    </div>
-  );
+    return (
+        <div className="App">
+            <TurnList />
+        </div>
+    );
 }
 
 export default App;

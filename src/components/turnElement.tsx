@@ -1,21 +1,16 @@
-import React, { CSSProperties, MouseEventHandler, useRef } from 'react';
-import { Turn } from '../interfaces';
+import { CSSProperties } from 'react';
+import { PartialTurn, Turn } from '../interfaces';
 import { TurnState } from '../types';
 
-export default function TurnElement(props: {
+interface TurnElementProps {
     turn: Turn;
-    useSavedTurn: MouseEventHandler;
-    holdTurn: MouseEventHandler;
-    finishTurn: MouseEventHandler;
-    removeTurn: MouseEventHandler;
-    incapacitate: MouseEventHandler;
-    capacitate: MouseEventHandler;
-}) {
-    const turn = props.turn;
+    setTurn: (turn: PartialTurn) => void;
+}
 
+export default function TurnElement({ turn, setTurn }: TurnElementProps) {
     const turnStateColorClass = (() => {
         if (turn.incapacitated) {
-            return 'danger'
+            return 'danger';
         }
 
         switch (turn.turnState) {
@@ -29,7 +24,7 @@ export default function TurnElement(props: {
                 return 'warning';
 
             default:
-                return 'danger'
+                return 'danger';
         }
     })();
 
@@ -37,68 +32,79 @@ export default function TurnElement(props: {
         // padding: '0.1rem',
         borderRadius: 'unset',
         borderColor: 'black',
-    }
+    };
 
     const buttons = {
-        capacitar:
+        capacitar: (
             <button
                 className="btn btn-sm btn-success"
                 style={buttonStyles}
-                onClick={props.capacitate}
+                onClick={() => setTurn({ incapacitated: false })}
             >
                 Recapacitar
-            </button>,
-        terminarTurno:
+            </button>
+        ),
+        terminarTurno: (
             <button
                 className="btn btn-sm btn-primary"
                 style={buttonStyles}
-                onClick={props.finishTurn}
+                onClick={() => setTurn({ turnState: TurnState.WAITING })}
             >
                 Siguiente turno
-            </button>,
-        guardarTurno:
+            </button>
+        ),
+        guardarTurno: (
             <button
                 className="btn btn-sm btn-secondary"
                 style={buttonStyles}
-                onClick={props.holdTurn}
+                onClick={() => setTurn({ turnState: TurnState.HOLD })}
             >
                 Guardar
-            </button>,
-        usarTurno:
+            </button>
+        ),
+        usarTurno: (
             <button
                 className="btn btn-sm btn-primary"
                 style={buttonStyles}
-                onClick={props.useSavedTurn}
+                onClick={() => setTurn({ turnState: TurnState.ACTING })}
             >
                 Actuar
-            </button>,
-        incapacitar:
+            </button>
+        ),
+        incapacitar: (
             <button
                 className="btn btn-sm btn-danger"
                 style={buttonStyles}
-                onClick={props.incapacitate}
+                onClick={() =>
+                    setTurn({
+                        turnState: TurnState.WAITING,
+                        incapacitated: true,
+                    })
+                }
                 disabled={turn.incapacitated}
             >
-                { turn.incapacitated ? 'Incapacitado' : 'Incapacitar' }
-            </button>,
-        usarRabia:
-        <button
-            className="btn btn-sm btn-primary"
-            style={buttonStyles}
-            onClick={props.useSavedTurn}
-        >
-            Actuar
-        </button>,
-    }
+                {turn.incapacitated ? 'Incapacitado' : 'Incapacitar'}
+            </button>
+        ),
+        usarRabia: (
+            <button
+                className="btn btn-sm btn-primary"
+                style={buttonStyles}
+                onClick={() => setTurn({ turnState: TurnState.ACTING })}
+            >
+                Actuar
+            </button>
+        ),
+    };
 
-    const buttonsToRender: JSX.Element[] = []
+    const buttonsToRender: JSX.Element[] = [];
     switch (turn.turnState) {
         case TurnState.ACTING:
             buttonsToRender.push(buttons.terminarTurno);
 
             if (!turn.incapacitated) {
-                buttonsToRender.push(buttons.guardarTurno)
-            } 
+                buttonsToRender.push(buttons.guardarTurno);
+            }
             break;
 
         case TurnState.HOLD:
@@ -113,27 +119,28 @@ export default function TurnElement(props: {
     }
 
     return (
-        <div className={'p-1 alert alert-'+turnStateColorClass}>
-            <div className='row g-0'>
-                <div className='col'>
+        <div className={'p-1 alert alert-' + turnStateColorClass}>
+            <div className="row g-0">
+                <div className="col">
                     <span>
-                        {turn.initiative}. {turn.characterName.toUpperCase()} &nbsp;
-                        { turn.actions > 1 && `(Actúa x${turn.actions})`}
+                        {turn.initiative}. {turn.characterName.toUpperCase()}
+                        &nbsp;
+                        {turn.actions > 1 && `(Actúa x${turn.actions})`}
                     </span>
                 </div>
-                <div className='col col-auto'>
-                    <div className={'badge bg-'+turnStateColorClass}>
+                <div className="col col-auto">
+                    <div className={'badge bg-' + turnStateColorClass}>
                         {turn.turnState}
                     </div>
                 </div>
             </div>
 
             <div className="row g-0">
-                { buttonsToRender.map((button, i) => (
-                    <div key={i} className='col col-auto p-0'>
+                {buttonsToRender.map((button, i) => (
+                    <div key={i} className="col col-auto p-0">
                         {button}
                     </div>
-                )) }
+                ))}
             </div>
         </div>
     );
