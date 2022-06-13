@@ -1,8 +1,0 @@
-
-// Override default variables before Bootstrap import
-@import './scss/variables';
-
-// Import Bootstrap and its default variables
-@import '~bootstrap/scss/bootstrap.scss';
-
-@import './scss/custom.scss';

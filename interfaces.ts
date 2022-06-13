@@ -1,4 +1,4 @@
-import { TurnState } from './types';
+import { TurnState } from "./types";
 
 export interface Turn extends TurnData {
     turnState: TurnState;
@@ -13,6 +13,7 @@ export interface PartialTurn {
     characterName?: string;
     initiative?: number;
     actions?: number;
+    usoRabia?: boolean;
 }
 
 export interface InitiativeFormData extends TurnData {
