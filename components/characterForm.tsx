@@ -12,6 +12,7 @@ interface FormControlData<T> {
     label: string;
     errorMsg?: string;
     isValid: boolean;
+    className: string;
     validator?: (value: T) => boolean;
 }
 
@@ -51,7 +52,7 @@ export default function CharacterForm(props: CharacterFormProps) {
 
     function inputOnChange(ev: SyntheticEvent<HTMLInputElement>) {
         const currentTarget = ev.currentTarget;
-        const controlKey = currentTarget.getAttribute('data-control-key') || '';
+        const controlKey = currentTarget.id;
 
         const newFormData = { ...formData };
         const controlData = newFormData[controlKey];
@@ -79,39 +80,56 @@ export default function CharacterForm(props: CharacterFormProps) {
 
     return (
         <>
-            <h2>Ingreso de personaje</h2>
+            <h2 className="text-xl">Ingreso de personaje</h2>
 
-            <form style={styles.form}>
+            <form className="p-4 my-2 border grid gap-y-2 grid-cols-auto-1fr shadow">
                 {Object.entries(formData).map(
                     ([controlKey, formControl], i) => (
                         <Fragment key={i}>
-                            <label htmlFor={controlKey}>
+                            <label className="pr-4" htmlFor={controlKey}>
                                 {formControl.label}
                             </label>
 
                             <Input
-                                data-control-key={controlKey}
-                                style={{}}
+                                id={controlKey}
+                                className={
+                                    formControl.type !== 'checkbox' && 'w-full '
+                                }
                                 type={formControl.type}
                                 value={formControl.value}
                                 onChange={inputOnChange}
                                 isValid={formControl.isValid}
                                 errorMsg={formControl.errorMsg}
-                                errorClassName={'text-red'}
                             />
                         </Fragment>
                     )
                 )}
-            </form>
 
-            <button
-                disabled={!isValid()}
-                className="btn btn-primary"
-                type="button"
-                onClick={submitForm}
-            >
-                Agregar
-            </button>
+                <button
+                    disabled={!isValid()}
+                    className={`
+                        col-start-2
+                        justify-self-end
+                        hover:text-white
+                        text-gray-100
+                        hover:bg-green-600
+                        bg-green-700
+                        disabled:bg-green-200
+                        disabled:text-gray-500
+                        disabled:cursor-not-allowed
+                        transition-colors
+                        rounded-md
+                        py-1
+                        px-2
+                        cursor-pointer
+                        font-bold
+                    `}
+                    type="button"
+                    onClick={submitForm}
+                >
+                    Agregar
+                </button>
+            </form>
         </>
     );
 }
@@ -122,6 +140,7 @@ const formDataInitialState = (): { [key: string]: FormControlData<any> } => ({
         type: 'text',
         label: 'Nombre',
         errorMsg: 'Nombre no puede estar vacío',
+        className: '',
         isValid: false,
         validator: (value: string) => !!value.trim(),
     },
@@ -130,6 +149,7 @@ const formDataInitialState = (): { [key: string]: FormControlData<any> } => ({
         type: 'number',
         label: 'Iniciativa',
         errorMsg: 'Iniciativa debe ser mayor a 0',
+        className: '',
         isValid: true,
         validator: (value: number) => value > 0,
     },
@@ -138,6 +158,7 @@ const formDataInitialState = (): { [key: string]: FormControlData<any> } => ({
         type: 'number',
         label: 'Acciones',
         errorMsg: 'Acciones debe ser mayor a 0',
+        className: '',
         isValid: true,
         validator: (value: number) => value > 0,
     },
@@ -145,28 +166,7 @@ const formDataInitialState = (): { [key: string]: FormControlData<any> } => ({
         value: false,
         type: 'checkbox',
         label: 'Entra actuando',
+        className: '',
         isValid: true,
     },
 });
-
-const styles = {
-    form: {
-        display: 'grid',
-        gridTemplateColumns: 'auto 1fr',
-
-        label: {
-            paddingRight: '1rem',
-        },
-
-        input: {
-            width: '100%',
-
-            '&[type=checkbox]': {
-                width: 'auto',
-            },
-        },
-    },
-    error: {
-        color: 'red',
-    },
-};

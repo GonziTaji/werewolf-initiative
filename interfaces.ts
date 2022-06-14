@@ -1,6 +1,7 @@
-import { TurnState } from "./types";
+import { TurnState } from './types';
 
 export interface Turn extends TurnData {
+    id?: string;
     turnState: TurnState;
     actionsUsed: number;
     incapacitated: boolean;

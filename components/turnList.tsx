@@ -43,17 +43,10 @@ export default function TurnList() {
     }, [turnIndex]);
 
     return (
-        <div style={{ maxWidth: '650px', margin: 'auto', padding: '0 2rem' }}>
+        <div className="px-1 m-auto max-w-4xl">
             <CharacterForm submitForm={addTurn}></CharacterForm>
 
-            <div
-                style={{
-                    display: 'flex',
-                    justifyContent: 'space-between',
-                    alignContent: 'center',
-                    alignItems: 'center',
-                }}
-            >
+            <div className="flex justify-between content-center items-center">
                 <h2>Turnos</h2>
 
                 {!roundsStarted && (
@@ -66,7 +59,7 @@ export default function TurnList() {
                 )}
             </div>
 
-            <div>
+            <div className="flex flex-col gap-y-2">
                 {turns.map((item, i) => (
                     <TurnElement
                         key={i}
@@ -75,8 +68,15 @@ export default function TurnList() {
                     />
                 ))}
             </div>
+
+            <button onClick={getNextInitiative}>next</button>
+            <button onClick={getPreviousInitiative}>previous</button>
         </div>
     );
+
+    function getNextInitiative() {}
+
+    function getPreviousInitiative() {}
 
     function modifyTurn(index: number, changes: PartialTurn) {
         const newTurns = [...turns];
@@ -97,10 +97,27 @@ export default function TurnList() {
         setTurns(newTurns);
     }
 
-    function addTurn(turn: Turn) {
-        const newTurns = orderByInitiative([turn, ...turns]);
+    function addTurn(newTurn: Turn) {
+        newTurn.id = Date.now().toString();
 
-        setTurns(newTurns);
+        if (turnIndex === -1) {
+            setTurns(orderByInitiative([newTurn, ...turns]));
+        } else {
+            const newTurns = [...turns];
+
+            for (let i = 0; i < newTurns.length; i++) {
+                if (newTurns[i].initiative > newTurn.initiative) {
+                    newTurns.splice(i, 0, newTurn);
+                    setTurnIndex((turnIndex) => turnIndex + 1);
+                    break;
+                } else if (i === newTurns.length - 1) {
+                    newTurns.push(newTurn);
+                    break;
+                }
+            }
+
+            setTurns(newTurns);
+        }
     }
 
     function orderByInitiative(input: Turn[]) {
