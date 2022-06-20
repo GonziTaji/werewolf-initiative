@@ -79,35 +79,28 @@ export default function CharacterForm(props: CharacterFormProps) {
     }
 
     return (
-        <>
-            <h2 className="text-xl">Ingreso de personaje</h2>
+        <form className="grid gap-y-2 grid-cols-auto-1fr">
+            {Object.entries(formData).map(([controlKey, formControl], i) => (
+                <Fragment key={i}>
+                    <label className="pr-4" htmlFor={controlKey}>
+                        {formControl.label}
+                    </label>
 
-            <form className="p-4 my-2 border grid gap-y-2 grid-cols-auto-1fr shadow">
-                {Object.entries(formData).map(
-                    ([controlKey, formControl], i) => (
-                        <Fragment key={i}>
-                            <label className="pr-4" htmlFor={controlKey}>
-                                {formControl.label}
-                            </label>
+                    <Input
+                        id={controlKey}
+                        className={formControl.type !== 'checkbox' && 'w-full '}
+                        type={formControl.type}
+                        value={formControl.value}
+                        onChange={inputOnChange}
+                        isValid={formControl.isValid}
+                        errorMsg={formControl.errorMsg}
+                    />
+                </Fragment>
+            ))}
 
-                            <Input
-                                id={controlKey}
-                                className={
-                                    formControl.type !== 'checkbox' && 'w-full '
-                                }
-                                type={formControl.type}
-                                value={formControl.value}
-                                onChange={inputOnChange}
-                                isValid={formControl.isValid}
-                                errorMsg={formControl.errorMsg}
-                            />
-                        </Fragment>
-                    )
-                )}
-
-                <button
-                    disabled={!isValid()}
-                    className={`
+            <button
+                disabled={!isValid()}
+                className={`
                         col-start-2
                         justify-self-end
                         hover:text-white
@@ -124,13 +117,12 @@ export default function CharacterForm(props: CharacterFormProps) {
                         cursor-pointer
                         font-bold
                     `}
-                    type="button"
-                    onClick={submitForm}
-                >
-                    Agregar
-                </button>
-            </form>
-        </>
+                type="button"
+                onClick={submitForm}
+            >
+                Agregar
+            </button>
+        </form>
     );
 }
 

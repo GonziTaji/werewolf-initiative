@@ -1,64 +1,155 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useReducer, useState } from 'react';
 import { PartialTurn, Turn } from '../interfaces';
 import { TurnState } from '../types';
 import CharacterForm from './CharacterForm';
+import Collapsable from './Collapsable';
 import TurnElement from './TurnElement';
 
+interface TurnListState {
+    turns: Turn[];
+    turnIndex: number;
+    roundIndex: number;
+}
+
+function turnsReducer(
+    turnState: TurnListState,
+    action: { type: 'addTurn' | 'modifyTurn' | 'startTurns'; turn?: Turn }
+) {
+    switch (action.type) {
+        case 'startTurns': {
+            const newState = { ...turnState };
+            newState.roundIndex = 0;
+            newState.turnIndex = 0;
+            newState.turns[0].turnState = TurnState.ACTING;
+            return newState;
+        }
+
+        case 'modifyTurn': {
+            const newState = {
+                ...turnState,
+                turns: turnState.turns.map((t) => {
+                    if (t.id === action.turn.id) {
+                        return { ...action.turn };
+                    }
+
+                    return { ...t };
+                }),
+            };
+
+            const noActing = newState.turns.every(
+                (turn) => turn.turnState !== TurnState.ACTING
+            );
+
+            if (noActing) {
+                if (newState.turnIndex === newState.turns.length - 1) {
+                    newState.turnIndex = 0;
+                    newState.roundIndex += 1;
+                } else {
+                    newState.turnIndex += 1;
+                }
+
+                newState.turns[newState.turnIndex].turnState = TurnState.ACTING;
+            }
+
+            return newState;
+        }
+
+        case 'addTurn': {
+            const newState = {
+                ...turnState,
+                turns: [...turnState.turns],
+            };
+
+            const newTurn = {
+                ...action.turn,
+                id: Date.now().toString(),
+            };
+
+            if (turnState.turnIndex === -1) {
+                newState.turns = [newTurn, ...newState.turns].sort((a, b) =>
+                    a.initiative < b.initiative ? 1 : -1
+                );
+            } else {
+                const newTurns = [...newState.turns];
+
+                for (let i = 0; i < newTurns.length; i++) {
+                    if (newTurns[i].initiative < newTurn.initiative) {
+                        newTurns.splice(i, 0, newTurn);
+                        newState.turnIndex += 1;
+                        break;
+                    } else if (i === newTurns.length - 1) {
+                        newTurns.push(newTurn);
+                        break;
+                    }
+                }
+
+                newState.turns = newTurns;
+            }
+            return newState;
+        }
+    }
+}
+
 export default function TurnList() {
-    const [turns, setTurns] = useState<Turn[]>([]);
-    const [turnIndex, setTurnIndex] = useState(-1);
-    const [roundIndex, setRoundIndex] = useState(0);
+    const [{ turns, turnIndex, roundIndex }, doTurnAction] = useReducer(
+        turnsReducer,
+        {
+            turns: [],
+            turnIndex: -1,
+            roundIndex: -1,
+        }
+    );
 
     const roundsStarted = turnIndex !== -1;
 
-    useEffect(() => {
-        if (!roundsStarted) {
-            return;
-        }
-
-        if (turns.every((turn) => turn.turnState !== TurnState.ACTING)) {
-            setTurnIndex((prevIurnIndex) => {
-                if (prevIurnIndex == turns.length - 1) {
-                    return 0;
-                }
-
-                return prevIurnIndex + 1;
-            });
-        }
-    }, [turns]);
-
-    useEffect(() => {
-        if (turns.length && turns) {
-            const newTurns = [...turns];
-            newTurns[turnIndex].turnState = TurnState.ACTING;
-            newTurns[turnIndex].actionsUsed = 0;
-            setTurns(newTurns);
-        }
-    }, [turnIndex]);
-
-    useEffect(() => {
-        if (turnIndex === -1) {
-            setRoundIndex(roundIndex + 1);
-        }
-    }, [turnIndex]);
+    const [showCharacterForm, setShowCharacterForm] = useState(true);
 
     return (
-        <div className="px-1 m-auto max-w-4xl">
-            <CharacterForm submitForm={addTurn}></CharacterForm>
+        <div className="m-auto max-w-4xl">
+            <div className="my-2 p-4 pb-0">
+                <div className="flex justify-between content-center pb-3">
+                    <h2 className="col-span-2 text-xl">Ingreso de personaje</h2>
 
-            <div className="flex justify-between content-center items-center">
-                <h2>Turnos</h2>
+                    <button
+                        className="underline text-cyan-600"
+                        type="button"
+                        onClick={() => setShowCharacterForm(!showCharacterForm)}
+                    >
+                        {showCharacterForm ? 'Esconder' : 'Mostrar'}
+                    </button>
+                </div>
 
+                <Collapsable collapsed={!showCharacterForm}>
+                    <CharacterForm submitForm={addTurn}></CharacterForm>
+                </Collapsable>
+            </div>
+
+            <hr className="h-1 my-2 bg-rose-800" />
+
+            <div className="flex gap-12 content-center items-center">
+                <h2>
+                    Turnos {turnIndex}
+                    <small className="block">Ronda {roundIndex + 1}</small>
+                </h2>
                 {!roundsStarted && (
                     <button
+                        className={`
+                            font-bold
+                            bg-rose-700
+                            text-white
+                            disabled:bg-rose-300
+                            disabled:cursor-not-allowed
+                            cursor-pointer
+                            px-2 py-1
+                            rounded
+                        `}
                         disabled={!turns.length}
-                        onClick={() => setTurnIndex(0)}
+                        onClick={() => doTurnAction({ type: 'startTurns' })}
                     >
                         Comenzar
                     </button>
                 )}
             </div>
-
             <div className="flex flex-col gap-y-2">
                 {turns.map((item, i) => (
                     <TurnElement
@@ -68,59 +159,20 @@ export default function TurnList() {
                     />
                 ))}
             </div>
-
-            <button onClick={getNextInitiative}>next</button>
-            <button onClick={getPreviousInitiative}>previous</button>
         </div>
     );
 
-    function getNextInitiative() {}
-
-    function getPreviousInitiative() {}
-
     function modifyTurn(index: number, changes: PartialTurn) {
-        const newTurns = [...turns];
-
-        newTurns[index] = {
-            ...newTurns[index],
+        const turn = {
+            ...turns[index],
             ...changes,
         };
+        console.log('turnstate 2: ' + turn.turnState);
 
-        setTurns(newTurns);
-    }
-
-    function removeTurn(index: number) {
-        const newTurns = [...turns];
-
-        newTurns.splice(index, 1);
-
-        setTurns(newTurns);
+        doTurnAction({ type: 'modifyTurn', turn });
     }
 
     function addTurn(newTurn: Turn) {
-        newTurn.id = Date.now().toString();
-
-        if (turnIndex === -1) {
-            setTurns(orderByInitiative([newTurn, ...turns]));
-        } else {
-            const newTurns = [...turns];
-
-            for (let i = 0; i < newTurns.length; i++) {
-                if (newTurns[i].initiative > newTurn.initiative) {
-                    newTurns.splice(i, 0, newTurn);
-                    setTurnIndex((turnIndex) => turnIndex + 1);
-                    break;
-                } else if (i === newTurns.length - 1) {
-                    newTurns.push(newTurn);
-                    break;
-                }
-            }
-
-            setTurns(newTurns);
-        }
-    }
-
-    function orderByInitiative(input: Turn[]) {
-        return input.sort((a, b) => (a.initiative < b.initiative ? 1 : -1));
+        doTurnAction({ type: 'addTurn', turn: newTurn });
     }
 }

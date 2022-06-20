@@ -8,6 +8,7 @@ export interface Turn extends TurnData {
 }
 
 export interface PartialTurn {
+    id?: string;
     turnState?: TurnState;
     actionsUsed?: number;
     incapacitated?: boolean;
@@ -25,4 +26,9 @@ export interface TurnData {
     characterName: string;
     initiative: number;
     actions: number;
+}
+
+export interface ComponentBaseProps {
+    children?: any;
+    className?: string;
 }

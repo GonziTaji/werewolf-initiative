@@ -1,4 +1,4 @@
-import TurnList from "../components/TurnList";
+import TurnList from '../components/TurnList';
 
 export default function Home() {
     return <TurnList />;
