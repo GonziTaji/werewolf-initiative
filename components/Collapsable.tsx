@@ -17,20 +17,20 @@ const Collapsable = ({
     const childrenParent = useRef(null);
 
     return (
-            <div
-                {...props}
-                style={{
-                    height: collapsed
-                        ? '0px'
-                        : `${childrenParent.current?.scrollHeight}px`,
-                }}
-                className={
-                    className +
-                    ' overflow-auto transition-max-height transform duration-300 ease-in-out '
-                }
-            >
-                <div ref={childrenParent}>{children}</div>
-            </div>
+        <div
+            {...props}
+            style={{
+                height: collapsed
+                    ? '0px'
+                    : `${childrenParent.current?.scrollHeight}px`,
+            }}
+            className={
+                className +
+                ' overflow-hidden transition-max-height transform duration-300 ease-in-out '
+            }
+        >
+            <div ref={childrenParent}>{children}</div>
+        </div>
     );
 };
 

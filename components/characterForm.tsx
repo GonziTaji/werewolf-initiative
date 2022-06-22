@@ -1,10 +1,8 @@
 import { Fragment, SyntheticEvent, useState } from 'react';
-import { Turn } from '../interfaces';
+import { useTurns } from '../hooks/useTurns';
 import { TurnState } from '../types';
 import Input from './Input';
-interface CharacterFormProps {
-    submitForm: (newTurn: Turn) => void;
-}
+interface CharacterFormProps {}
 
 interface FormControlData<T> {
     value: T;
@@ -16,7 +14,8 @@ interface FormControlData<T> {
     validator?: (value: T) => boolean;
 }
 
-export default function CharacterForm(props: CharacterFormProps) {
+export default function CharacterForm({}: CharacterFormProps) {
+    const { dispatchTurns } = useTurns();
     const [formData, setFormData] = useState(formDataInitialState());
 
     function submitForm() {
@@ -49,7 +48,7 @@ export default function CharacterForm(props: CharacterFormProps) {
             formValues[key] = formData[key].value;
         }
 
-        props.submitForm(formValues);
+        dispatchTurns({ type: 'agregar', turn: formValues });
         setFormData(formDataInitialState());
     }
 

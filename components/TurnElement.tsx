@@ -1,76 +1,15 @@
-import { PartialTurn, Turn } from '../interfaces';
+import { useTurns } from '../hooks/useTurns';
+import { Turn } from '../interfaces';
 import { TurnState } from '../types';
+import { TurnAction } from './TurnListContextProvider';
 
 interface TurnElementProps {
     turn: Turn;
-    setTurn: (turn: PartialTurn) => void;
-    turnsStarted: boolean;
 }
 
-type TurnAction =
-    | 'actuar'
-    | 'rabia'
-    | 'guardar'
-    | 'usarTurno'
-    | 'incapacitar'
-    | 'capacitar';
+export default function TurnElement({ turn }: TurnElementProps) {
+    const { roundIndex, dispatchTurns } = useTurns();
 
-function turnReducer(state: Turn, action: { type: TurnAction; payload?: {} }) {
-    const newTurn = { ...state };
-
-    switch (action.type) {
-        case 'actuar':
-            newTurn.actionsRemaining--;
-
-            if (newTurn.actionsRemaining == 0) {
-                newTurn.turnState = TurnState.WAITING;
-                newTurn.isSavedTurn = false;
-            }
-
-            break;
-
-        case 'rabia':
-            newTurn.actionsRemaining++;
-
-            if (newTurn.turnState === TurnState.WAITING) {
-                newTurn.turnState = TurnState.ACTING;
-            }
-
-            break;
-
-        case 'guardar':
-            newTurn.turnState = TurnState.HOLD;
-            break;
-
-        case 'usarTurno':
-            newTurn.turnState = TurnState.ACTING;
-            newTurn.isSavedTurn = true;
-            break;
-
-        case 'incapacitar':
-            newTurn.incapacitated = true;
-
-            if (!newTurn.isOwnTurn) {
-                newTurn.actionsRemaining = 0;
-                newTurn.turnState = TurnState.WAITING;
-                newTurn.isSavedTurn = false;
-            }
-
-            break;
-
-        case 'capacitar':
-            newTurn.incapacitated = false;
-            break;
-    }
-
-    return newTurn;
-}
-
-export default function TurnElement({
-    turn,
-    setTurn,
-    turnsStarted,
-}: TurnElementProps) {
     let containerBg = '';
 
     switch (turn.turnState) {
@@ -83,9 +22,12 @@ export default function TurnElement({
             break;
     }
 
-    // not using state as for now
-    const dispatchTun = (action: TurnAction) =>
-        setTurn(turnReducer(turn, { type: action }));
+    const dispatchTurnAction = (action: TurnAction) =>
+        dispatchTurns({
+            type: 'modificar',
+            turnAction: action,
+            turnId: turn.id,
+        });
 
     const buttonProps: {
         [k: string]: {
@@ -98,19 +40,19 @@ export default function TurnElement({
     } = {
         actuar: {
             className: 'text-white bg-emerald-800 hover:bg-emerald-700',
-            onClick: () => dispatchTun('actuar'),
+            onClick: () => dispatchTurnAction('actuar'),
             label: 'Actuar',
             disabled: turn.turnState !== TurnState.ACTING,
         },
         usarRabia: {
             className: 'text-white bg-red-400 hover:bg-red-300',
-            onClick: () => dispatchTun('rabia'),
+            onClick: () => dispatchTurnAction('rabia'),
             label: 'Rabia',
             disabled: turn.incapacitated,
         },
         guardarTurno: {
             className: 'text-stone-700 bg-orange-200 hover:bg-orange-300',
-            onClick: () => dispatchTun('guardar'),
+            onClick: () => dispatchTurnAction('guardar'),
             label: 'Guardar',
             disabled:
                 !turn.isOwnTurn ||
@@ -120,19 +62,19 @@ export default function TurnElement({
         },
         usarTurno: {
             className: 'text-stone-700 bg-orange-200 hover:bg-orange-300',
-            onClick: () => dispatchTun('usarTurno'),
+            onClick: () => dispatchTurnAction('usarTurno'),
             label: 'Usar turno',
             hidden: turn.turnState !== TurnState.HOLD || turn.incapacitated,
         },
         capacitar: {
             className: 'bg-red-100 text-rose-800 hover:bg-red-200',
-            onClick: () => dispatchTun('capacitar'),
+            onClick: () => dispatchTurnAction('capacitar'),
             label: 'Capacitar',
             hidden: turn.incapacitated === false,
         },
         incapacitar: {
             className: 'text-red-100 bg-rose-800 hover:bg-rose-700',
-            onClick: () => dispatchTun('incapacitar'),
+            onClick: () => dispatchTurnAction('incapacitar'),
             label: 'Incapacitar',
             hidden: turn.incapacitated === true,
         },
@@ -165,7 +107,7 @@ export default function TurnElement({
                         <ActionButton
                             key={i}
                             {...props}
-                            disabled={!turnsStarted || props.disabled}
+                            disabled={roundIndex < 0 || props.disabled}
                         >
                             <span className="text-xs">
                                 {props.label.toUpperCase()}
