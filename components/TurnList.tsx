@@ -21,6 +21,8 @@ function turnsReducer(
             newState.roundIndex = 0;
             newState.turnIndex = 0;
             newState.turns[0].turnState = TurnState.ACTING;
+            newState.turns[0].isOwnTurn = true;
+            newState.turns[0].actionsRemaining = newState.turns[0].actions;
             return newState;
         }
 
@@ -41,6 +43,11 @@ function turnsReducer(
             );
 
             if (noActing) {
+                newState.turns.forEach((t) => {
+                    t.isOwnTurn = false;
+                    t.isSavedTurn = false;
+                });
+
                 if (newState.turnIndex === newState.turns.length - 1) {
                     newState.turnIndex = 0;
                     newState.roundIndex += 1;
@@ -49,6 +56,9 @@ function turnsReducer(
                 }
 
                 newState.turns[newState.turnIndex].turnState = TurnState.ACTING;
+                newState.turns[newState.turnIndex].isOwnTurn = true;
+                newState.turns[newState.turnIndex].actionsRemaining +=
+                    newState.turns[newState.turnIndex].actions;
             }
 
             return newState;
@@ -63,6 +73,7 @@ function turnsReducer(
             const newTurn = {
                 ...action.turn,
                 id: Date.now().toString(),
+                actionsRemaining: 0,
             };
 
             if (turnState.turnIndex === -1) {
@@ -91,7 +102,7 @@ function turnsReducer(
 }
 
 export default function TurnList() {
-    const [{ turns, turnIndex, roundIndex }, doTurnAction] = useReducer(
+    const [{ turns, turnIndex, roundIndex }, dispatchTurns] = useReducer(
         turnsReducer,
         {
             turns: [],
@@ -128,7 +139,7 @@ export default function TurnList() {
 
             <div className="flex gap-12 content-center items-center">
                 <h2>
-                    Turnos {turnIndex}
+                    Turnos {turnIndex + 1}
                     <small className="block">Ronda {roundIndex + 1}</small>
                 </h2>
                 {!roundsStarted && (
@@ -144,7 +155,7 @@ export default function TurnList() {
                             rounded
                         `}
                         disabled={!turns.length}
-                        onClick={() => doTurnAction({ type: 'startTurns' })}
+                        onClick={() => dispatchTurns({ type: 'startTurns' })}
                     >
                         Comenzar
                     </button>
@@ -153,6 +164,7 @@ export default function TurnList() {
             <div className="flex flex-col gap-y-2">
                 {turns.map((item, i) => (
                     <TurnElement
+                        turnsStarted={roundIndex >= 0}
                         key={i}
                         turn={item}
                         setTurn={(turn) => modifyTurn(i, turn)}
@@ -167,12 +179,11 @@ export default function TurnList() {
             ...turns[index],
             ...changes,
         };
-        console.log('turnstate 2: ' + turn.turnState);
 
-        doTurnAction({ type: 'modifyTurn', turn });
+        dispatchTurns({ type: 'modifyTurn', turn });
     }
 
     function addTurn(newTurn: Turn) {
-        doTurnAction({ type: 'addTurn', turn: newTurn });
+        dispatchTurns({ type: 'addTurn', turn: newTurn });
     }
 }

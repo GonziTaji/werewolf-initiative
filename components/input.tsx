@@ -11,18 +11,22 @@ export default function Input({ isValid, errorMsg, ...props }: NewInputProps) {
     const checked = props.type === 'checkbox' ? props.value : false;
     let showError = isValid === undefined ? false : !isValid;
 
-    let className = 'border border-black rounded-sm px-2';
+    let className = 'border rounded-sm px-2';
     if (props.className) {
         className += ' ' + props.className;
     }
 
+    if (showError) {
+        className += ' ' + 'border-rose-600';
+    } else {
+        className += ' ' + 'border-black';
+    }
+
+    errorMsg = errorMsg || 'Valor inválido';
+
     return (
-        <div>
+        <div title={showError ? errorMsg : ''}>
             <input {...props} className={className} checked={checked} />
-            <br />
-            <small className="text-red-700">
-                {showError && (errorMsg || 'Valor inválido')}
-            </small>
         </div>
     );
 }

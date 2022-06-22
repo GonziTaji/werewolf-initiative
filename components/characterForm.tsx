@@ -21,6 +21,19 @@ export default function CharacterForm(props: CharacterFormProps) {
 
     function submitForm() {
         if (!isValid()) {
+            const errors = [];
+
+            for (const key in formData) {
+                if (!formData[key].isValid) {
+                    if (formData[key].errorMsg) {
+                        errors.push(formData[key].errorMsg);
+                    } else {
+                        errors.push(`Campo inválido: ${formData[key].label}`);
+                    }
+                }
+            }
+
+            alert(errors.join('\n'));
             return;
         }
 
@@ -28,7 +41,7 @@ export default function CharacterForm(props: CharacterFormProps) {
             turnState: formData.entersActing.value
                 ? TurnState.ACTING
                 : TurnState.WAITING,
-            actionsUsed: 0,
+            actionsRemaining: 0,
             incapacitated: false,
         };
 
@@ -99,7 +112,6 @@ export default function CharacterForm(props: CharacterFormProps) {
             ))}
 
             <button
-                disabled={!isValid()}
                 className={`
                         col-start-2
                         justify-self-end
