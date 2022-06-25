@@ -1,10 +1,12 @@
-import { createContext, useReducer } from 'react';
+import { createContext, useEffect, useReducer } from 'react';
 import { Turn } from '../interfaces';
 import { TurnState } from '../types';
 
 export const TurnListContext = createContext<TurnListStateContextValue>(
     {} as any
 );
+
+const localStorageTurnDataKey = 'turns-data';
 
 export default function TurnListContextProvider({ children }) {
     const [{ turns, turnIndex, roundIndex }, dispatchTurns] = useReducer(
@@ -15,6 +17,31 @@ export default function TurnListContextProvider({ children }) {
             roundIndex: -1,
         }
     );
+
+    // useEffect(() => {
+    //     console.log('e');
+    //     const localStorageTurnData = localStorage.getItem(
+    //         localStorageTurnDataKey
+    //     );
+
+    //     if (localStorageTurnData) {
+    //         dispatchTurns({
+    //             type: 'init',
+    //             contextState: JSON.parse(localStorageTurnData),
+    //         });
+    //     }
+    // }, []);
+
+    // useEffect(() => {
+    //     localStorage.setItem(
+    //         localStorageTurnDataKey,
+    //         JSON.stringify({
+    //             turns,
+    //             turnIndex,
+    //             roundIndex,
+    //         })
+    //     );
+    // }, [turns, turnIndex, roundIndex]);
 
     return (
         <TurnListContext.Provider
@@ -33,6 +60,10 @@ export default function TurnListContextProvider({ children }) {
 
 function turnListReducer(turnState: TurnsState, action: TurnsAction) {
     switch (action.type) {
+        case 'init': {
+            return { ...action.contextState };
+        }
+
         case 'comenzar': {
             const newState = { ...turnState };
             newState.roundIndex = 0;
@@ -185,9 +216,10 @@ interface TurnsAction {
     turn?: Turn;
     turnAction?: TurnAction;
     turnId?: string;
+    contextState?: TurnListStateContextValue;
 }
 
-type TurnsActionType = 'agregar' | 'comenzar' | 'modificar';
+type TurnsActionType = 'agregar' | 'comenzar' | 'modificar' | 'init';
 
 export type TurnAction =
     | 'actuar'

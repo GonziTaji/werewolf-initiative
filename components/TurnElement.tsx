@@ -14,11 +14,11 @@ export default function TurnElement({ turn }: TurnElementProps) {
 
     switch (turn.turnState) {
         case TurnState.ACTING:
-            containerBg = turn.incapacitated ? 'bg-rose-800' : 'bg-blue-300';
+            containerBg = turn.incapacitated ? 'bg-pink-800' : 'bg-blue-300';
             break;
 
         default:
-            containerBg = turn.incapacitated ? 'bg-rose-100' : 'bg-blue-100';
+            containerBg = turn.incapacitated ? 'bg-pink-100' : 'bg-blue-100';
             break;
     }
 
@@ -81,39 +81,39 @@ export default function TurnElement({ turn }: TurnElementProps) {
     };
 
     return (
-        <div className={containerBg + ' p-3 shadow-lg'}>
-            <div className="grid grid-rows-2">
-                <div className="flex space-x-2 pb-1">
-                    <span
-                        className={
-                            'bg-white px-2' +
-                            (turn.isOwnTurn ? ' font-bold' : '')
-                        }
-                    >
-                        {turn.initiative}
-                    </span>
+        <div className={containerBg + ' p-1 border border-black'}>
+            <div className="grid grid-rows-a-2">
+                <div
+                    className={
+                        'grid grid-cols-[auto_1fr_auto] space-x-2 pb-1' +
+                        (turn.isOwnTurn ? '  font-bold' : '')
+                    }
+                >
+                    <span className={'px-2'}>{turn.initiative}</span>
 
-                    <span className="grow bg-white px-2">
+                    <span className="grow px-2 overflow-hidden overflow-ellipsis whitespace-nowrap">
                         {turn.characterName.toUpperCase()}
                     </span>
 
-                    <span className="bg-white px-2">
+                    <span className="px-2">
                         {turn.actionsRemaining}/{turn.actions}
                     </span>
                 </div>
 
                 <div className="grid grid-cols-4">
-                    {Object.values(buttonProps).map((props, i) => (
-                        <ActionButton
-                            key={i}
-                            {...props}
-                            disabled={roundIndex < 0 || props.disabled}
-                        >
-                            <span className="text-xs">
-                                {props.label.toUpperCase()}
-                            </span>
-                        </ActionButton>
-                    ))}
+                    {Object.values(buttonProps)
+                        .filter((p) => !p.hidden)
+                        .map(({ disabled, ...props }, i) => (
+                            <ActionButton
+                                key={i}
+                                {...props}
+                                disabled={roundIndex < 0 || disabled}
+                            >
+                                <span className="text-xs">
+                                    {props.label.toUpperCase()}
+                                </span>
+                            </ActionButton>
+                        ))}
                 </div>
             </div>
         </div>
@@ -137,7 +137,10 @@ function ActionButton({
                 disabled:cursor-not-allowed
                 transition-colors
                 cursor-pointer
-                font-bold `}
+                font-bold
+                border border-emerald-900
+                border-r-0
+                last:border-r`}
         >
             {children}
         </button>
