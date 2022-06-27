@@ -48,7 +48,7 @@ export default function CharacterForm({}: CharacterFormProps) {
             formValues[key] = formData[key].value;
         }
 
-        dispatchTurns({ type: 'agregar', turn: formValues });
+        dispatchTurns({ type: 'agregar', turns: [formValues] });
         setFormData(formDataInitialState());
     }
 

@@ -10,12 +10,14 @@ export default function CharacterFormContainer() {
     useEffect(() => {
         if (roundIndex === 0) {
             setShow(false);
+        } else if (roundIndex === -1) {
+            setShow(true);
         }
     }, [roundIndex]);
 
     return (
         <>
-            <div className="mt-4 px-4 pb-0">
+            <div className="mt-2 px-4 pb-0">
                 <div className="flex justify-between content-center">
                     <h2 className="col-span-2 text-xl">Ingreso de personaje</h2>
 
@@ -28,8 +30,8 @@ export default function CharacterFormContainer() {
                     </button>
                 </div>
 
-                <Collapsable className="mt-3" collapsed={!show}>
-                    <CharacterForm></CharacterForm>
+                <Collapsable className={show ? 'mt-3' : ''} collapsed={!show}>
+                    <CharacterForm />
                 </Collapsable>
             </div>
 

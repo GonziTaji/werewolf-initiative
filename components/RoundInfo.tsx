@@ -1,4 +1,5 @@
 import { useTurns } from '../hooks/useTurns';
+import EndButton from './EndButton';
 import StartButton from './StartButton';
 
 export default function RoundInfo() {
@@ -9,9 +10,12 @@ export default function RoundInfo() {
     }
 
     return (
-        <div className="flex gap-4">
+        <div className="flex gap-4 items-center">
             <span>Turno: {turnIndex + 1}</span>
-            <span className="">Ronda: {roundIndex + 1}</span>
+            <span>Ronda: {roundIndex + 1}</span>
+            <div className="grow text-right m-1">
+                <EndButton />
+            </div>
         </div>
     );
 }

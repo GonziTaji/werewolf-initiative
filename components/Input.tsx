@@ -25,8 +25,11 @@ export default function Input({ isValid, errorMsg, ...props }: NewInputProps) {
     errorMsg = errorMsg || 'Valor inválido';
 
     return (
-        <div title={showError ? errorMsg : ''}>
-            <input {...props} className={className} checked={checked} />
-        </div>
+        <input
+            {...props}
+            title={showError ? errorMsg : ''}
+            className={className}
+            checked={checked}
+        />
     );
 }

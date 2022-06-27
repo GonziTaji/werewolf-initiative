@@ -9,39 +9,26 @@ export const TurnListContext = createContext<TurnListStateContextValue>(
 const localStorageTurnDataKey = 'turns-data';
 
 export default function TurnListContextProvider({ children }) {
-    const [{ turns, turnIndex, roundIndex }, dispatchTurns] = useReducer(
-        turnListReducer,
-        {
+    const [{ turns, turnIndex, roundIndex, lastInitiative }, dispatchTurns] =
+        useReducer(turnListReducer, {
             turns: [],
             turnIndex: -1,
             roundIndex: -1,
+            lastInitiative: 0,
+        } as TurnsState);
+
+    useEffect(() => {
+        const localStorageTurnData = localStorage.getItem(
+            localStorageTurnDataKey
+        );
+
+        if (localStorageTurnData) {
+            dispatchTurns({
+                type: 'init',
+                contextState: JSON.parse(localStorageTurnData),
+            });
         }
-    );
-
-    // useEffect(() => {
-    //     console.log('e');
-    //     const localStorageTurnData = localStorage.getItem(
-    //         localStorageTurnDataKey
-    //     );
-
-    //     if (localStorageTurnData) {
-    //         dispatchTurns({
-    //             type: 'init',
-    //             contextState: JSON.parse(localStorageTurnData),
-    //         });
-    //     }
-    // }, []);
-
-    // useEffect(() => {
-    //     localStorage.setItem(
-    //         localStorageTurnDataKey,
-    //         JSON.stringify({
-    //             turns,
-    //             turnIndex,
-    //             roundIndex,
-    //         })
-    //     );
-    // }, [turns, turnIndex, roundIndex]);
+    }, []);
 
     return (
         <TurnListContext.Provider
@@ -49,6 +36,7 @@ export default function TurnListContextProvider({ children }) {
                 turns,
                 turnIndex,
                 roundIndex,
+                lastInitiative,
                 roundsStarted: roundIndex >= 0,
                 dispatchTurns,
             }}
@@ -58,24 +46,51 @@ export default function TurnListContextProvider({ children }) {
     );
 }
 
-function turnListReducer(turnState: TurnsState, action: TurnsAction) {
+function turnListReducer(
+    turnState: TurnsState,
+    action: TurnsAction
+): TurnsState {
+    let newState: any;
+
     switch (action.type) {
         case 'init': {
-            return { ...action.contextState };
+            newState = { ...action.contextState };
+            break;
+        }
+
+        case 'limpiar': {
+            newState = {
+                turns: [],
+                turnIndex: -1,
+                roundIndex: -1,
+            };
+
+            break;
         }
 
         case 'comenzar': {
-            const newState = { ...turnState };
+            newState = { ...turnState };
+
+            newState.lastInitiative = Math.max(
+                ...turnState.turns.map((t) => t.initiative)
+            );
+
+            newState.turns
+                .filter((t: Turn) => t.initiative === newState.lastInitiative)
+                .forEach((t: Turn) => {
+                    t.turnState = TurnState.ACTING;
+                    t.isOwnTurn = true;
+                    t.actionsRemaining = t.actions;
+                });
+
             newState.roundIndex = 0;
-            newState.turnIndex = 0;
-            newState.turns[0].turnState = TurnState.ACTING;
-            newState.turns[0].isOwnTurn = true;
-            newState.turns[0].actionsRemaining = newState.turns[0].actions;
-            return newState;
+            newState.urnIndex = 0;
+
+            break;
         }
 
         case 'modificar': {
-            const newState = {
+            newState = {
                 ...turnState,
                 turns: turnState.turns.map((t, i) => {
                     if (t.id === action.turnId) {
@@ -91,62 +106,78 @@ function turnListReducer(turnState: TurnsState, action: TurnsAction) {
             );
 
             if (noActing) {
-                newState.turns.forEach((t) => {
-                    t.isOwnTurn = false;
-                    t.isSavedTurn = false;
-                });
+                newState.lastInitiative =
+                    [...newState.turns]
+                        .sort((a, b) => (a.initiative < b.initiative ? 1 : -1))
+                        .find((t) => t.initiative < newState.lastInitiative)
+                        ?.initiative || 0;
 
-                if (newState.turnIndex === newState.turns.length - 1) {
+                if (!newState.lastInitiative) {
+                    newState.roundIndex++;
                     newState.turnIndex = 0;
-                    newState.roundIndex += 1;
+
+                    newState.lastInitiative = Math.max(
+                        ...newState.turns.map((t) => t.initiative)
+                    );
                 } else {
-                    newState.turnIndex += 1;
+                    newState.turnIndex++;
                 }
 
-                newState.turns[newState.turnIndex].turnState = TurnState.ACTING;
-                newState.turns[newState.turnIndex].isOwnTurn = true;
-                newState.turns[newState.turnIndex].actionsRemaining +=
-                    newState.turns[newState.turnIndex].actions;
+                newState.turns.forEach((t: Turn) => {
+                    t.isOwnTurn = false;
+                    t.isSavedTurn = false;
+
+                    if (t.initiative === newState.lastInitiative) {
+                        t.turnState = TurnState.ACTING;
+                        t.isOwnTurn = true;
+                        t.actionsRemaining = t.actions;
+                    }
+                });
             }
 
-            return newState;
+            break;
         }
 
         case 'agregar': {
-            const newState = {
+            newState = {
                 ...turnState,
                 turns: [...turnState.turns],
             };
 
-            const newTurn = {
-                ...action.turn,
-                id: Date.now().toString(),
-                actionsRemaining: 0,
-            };
+            for (const turn of action.turns) {
+                const newTurn = {
+                    ...turn,
+                    id: Date.now().toString(),
+                };
 
-            if (turnState.turnIndex === -1) {
-                newState.turns = [newTurn, ...newState.turns].sort((a, b) =>
-                    a.initiative < b.initiative ? 1 : -1
-                );
-            } else {
-                const newTurns = [...newState.turns];
+                if (turnState.turnIndex === -1) {
+                    newState.turns = [newTurn, ...newState.turns].sort((a, b) =>
+                        a.initiative < b.initiative ? 1 : -1
+                    );
+                } else {
+                    const newTurns = [...newState.turns];
 
-                for (let i = 0; i < newTurns.length; i++) {
-                    if (newTurns[i].initiative < newTurn.initiative) {
-                        newTurns.splice(i, 0, newTurn);
-                        newState.turnIndex += 1;
-                        break;
-                    } else if (i === newTurns.length - 1) {
-                        newTurns.push(newTurn);
-                        break;
+                    for (let i = 0; i < newTurns.length; i++) {
+                        if (newTurns[i].initiative < newTurn.initiative) {
+                            newTurns.splice(i, 0, newTurn);
+                            newState.turnIndex += 1;
+                            break;
+                        } else if (i === newTurns.length - 1) {
+                            newTurns.push(newTurn);
+                            break;
+                        }
                     }
-                }
 
-                newState.turns = newTurns;
+                    newState.turns = newTurns;
+                }
             }
-            return newState;
+            break;
         }
     }
+
+    localStorage.setItem(localStorageTurnDataKey, JSON.stringify(newState));
+
+    return newState;
 }
 
 function doTurnAction(turn: Turn, action: TurnAction) {
@@ -209,17 +240,23 @@ export interface TurnsState {
     turns: Turn[];
     turnIndex: number;
     roundIndex: number;
+    lastInitiative: number;
 }
 
 interface TurnsAction {
     type: TurnsActionType;
-    turn?: Turn;
+    turns?: Turn[];
     turnAction?: TurnAction;
     turnId?: string;
     contextState?: TurnListStateContextValue;
 }
 
-type TurnsActionType = 'agregar' | 'comenzar' | 'modificar' | 'init';
+type TurnsActionType =
+    | 'agregar'
+    | 'comenzar'
+    | 'modificar'
+    | 'init'
+    | 'limpiar';
 
 export type TurnAction =
     | 'actuar'
