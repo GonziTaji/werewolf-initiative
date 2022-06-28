@@ -35,3 +35,19 @@ export interface ComponentBaseProps<T = any> {
     className?: string;
     style?: React.CSSProperties;
 }
+
+export interface FormControlData<T> {
+    value: T;
+    type: string;
+    label: string;
+    errorMsg?: string;
+    isValid: boolean;
+    className: string;
+    validator?: (value: T) => boolean;
+}
+
+export interface SimpleCharacterFormData {
+    characterName: FormControlData<any>;
+    initiative: FormControlData<any>;
+    actions: FormControlData<any>;
+}

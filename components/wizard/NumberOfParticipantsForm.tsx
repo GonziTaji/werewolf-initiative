@@ -1,4 +1,5 @@
 import Input from '../Input';
+import { FaPlus, FaMinus } from 'react-icons/fa';
 
 interface NumberOfParticipantsFormProps {
     participantsCount: number;
@@ -13,40 +14,46 @@ export default function NumberOfParticipantsForm({
     const plus = () => setParticipantsCount(participantsCount + 1);
 
     return (
-        <div className="flex items-stretch">
-            <h1 className="grow text-lg">Ingreso de turnos</h1>
+        <div className="text-center">
+            <h1 className="pb-16 text-3xl max-w-md mx-auto">
+                Ingrese el numero de participantes
+            </h1>
 
-            <MinusButton onClick={minus} disabled={participantsCount === 1} />
+            <div className="flex justify-center mx-auto w-fit rounded-lg border border-black shadow-md">
+                <MinusButton
+                    onClick={minus}
+                    disabled={participantsCount === 1}
+                />
 
-            <Input
-                className="w-12 text-center rounded-none"
-                type="number"
-                min="1"
-                value={participantsCount}
-                onInput={(ev) =>
-                    setParticipantsCount(parseInt(ev.currentTarget.value))
-                }
-            />
+                <input
+                    className="text-3xl w-24 text-center border-none"
+                    min="1"
+                    value={participantsCount}
+                    onInput={(ev) =>
+                        setParticipantsCount(parseInt(ev.currentTarget.value))
+                    }
+                />
 
-            <PlusButton onClick={plus} />
+                <PlusButton onClick={plus} />
+            </div>
+
+            <h2 className="pt-5 text-2xl">Participantes</h2>
         </div>
     );
 }
 
 function MinusButton({ className = '', ...props }: ControlButtonProps) {
-    className += ' border-r-0';
     return (
-        <ControlButton className={className} {...props}>
-            -
+        <ControlButton className={'group ' + className} {...props}>
+            <FaMinus className="h-6 text-inherit" />
         </ControlButton>
     );
 }
 
 function PlusButton({ className = '', ...props }: ControlButtonProps) {
-    className += ' border-l-0';
     return (
-        <ControlButton className={className} {...props}>
-            +
+        <ControlButton className={'group ' + className} {...props}>
+            <FaPlus className="h-6 text-inherit " />
         </ControlButton>
     );
 }
@@ -67,13 +74,11 @@ function ControlButton({
             className={
                 className +
                 `
+                text-black disabled:text-gray-500
                 cursor-pointer
                 disabled:cursor-not-allowed
-                w-8
-                border border-black
                 font-bold
-                bg-slate-300
-                text-slate-600
+                text-5xl
                 `
             }
             onClick={onClick}
