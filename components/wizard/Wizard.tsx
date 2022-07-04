@@ -1,23 +1,28 @@
 import { useTurns } from '../../hooks/useTurns';
-import MultiCharacterForm from './SimpleCharacterForm';
 import NumberOfParticipantsForm from './NumberOfParticipantsForm';
 import { SimpleCharacterFormData } from '../../interfaces';
 import { useMemo, useState } from 'react';
 import { FaCaretLeft, FaCaretRight } from 'react-icons/fa';
 import Input from '../Input';
+import TurnsConfirmation from './TurnsConfirmation';
+import maincss from '../../styles/main.module.css';
+import { useRouter } from 'next/router';
+import { TurnState } from '../../types';
+import { TurnsState } from '../TurnListContextProvider';
 
 const stepNames = [
     'Cantidad de participantes',
     'Información de Turnos',
-    'Comenzar encuentro',
+    'Confirma los turnos',
+    'Comenzar encuentro!',
 ];
 
 const footerHeight = '5rem';
 
 export default function Wizard() {
+    const router = useRouter();
     const { turns, dispatchTurns } = useTurns();
     const [forms, setForms] = useState([initialFormData()]);
-
     const [step, setStep] = useState(0);
 
     const stepName = useMemo(() => {
@@ -30,32 +35,50 @@ export default function Wizard() {
 
     return (
         <div className="">
-            <h1 className="text-xl text-center">
-                Paso {step + 1}: {stepName}
-            </h1>
-            <div
-                className="grid grid-cols-2 border border-black"
-                style={{ height: footerHeight }}
-            >
-                <button
-                    disabled={step === 0}
-                    onClick={() => setStep((s) => s - 1)}
-                    className="text-left border-teal-300 bg-teal-100 disabled:text-gray-400 px-3 h-full"
+            <div className="sticky top-0 shadow-md">
+                <h1 className="text-xl text-center">
+                    Paso {step + 1}: {stepName}
+                </h1>
+                <div
+                    className="grid grid-cols-2 border border-black"
+                    style={{ height: footerHeight }}
                 >
-                    <FaCaretLeft className="inline" />
-                    Atrás
-                    <small className="block">{stepNames[step - 1]}&nbsp;</small>
-                </button>
+                    <button
+                        disabled={step === 0}
+                        onClick={() => setStep((s) => s - 1)}
+                        className="text-left border-teal-300 bg-teal-100 disabled:text-gray-400 px-3 h-full"
+                    >
+                        <FaCaretLeft className="inline" />
+                        Atrás
+                        <small className="block">
+                            {stepNames[step - 1]}&nbsp;
+                        </small>
+                    </button>
 
-                <button
-                    disabled={step === stepNames.length - 1}
-                    onClick={validateStepAndGoNext}
-                    className="text-right border-teal-300 bg-teal-100 disabled:text-gray-400 px-3 h-full"
-                >
-                    Siguiente
-                    <FaCaretRight className="inline" />
-                    <small className="block">{stepNames[step + 1]}&nbsp;</small>
-                </button>
+                    <button
+                        disabled={step === stepNames.length - 1}
+                        onClick={validateStepAndGoNext}
+                        className={`
+                            text-right
+                            border-teal-300
+                            bg-teal-100
+                            disabled:text-gray-400
+                            h-full
+                            overflow-auto
+                            px-3
+                        `}
+                    >
+                        <div>
+                            <div className={step == 2 ? maincss.bounce : ''}>
+                                Siguiente
+                                <FaCaretRight className="inline" />
+                            </div>
+                            <small className="block">
+                                {stepNames[step + 1]}&nbsp;
+                            </small>
+                        </div>
+                    </button>
+                </div>
             </div>
 
             <WizardStep step={0} currentStep={step}>
@@ -68,11 +91,11 @@ export default function Wizard() {
             </WizardStep>
 
             <WizardStep step={1} currentStep={step}>
-                <span className="text-center block my-5">
+                <div className="text-center block my-5">
                     <h1 className="text-3xl">
                         Ingrese los turnos en el orden que sea
                     </h1>
-                </span>
+                </div>
                 <div className="px-2 space-y-2">
                     <div className="grid grid-cols-[3fr_1fr_1fr]">
                         <label>Nombre</label>
@@ -139,22 +162,7 @@ export default function Wizard() {
             </WizardStep>
 
             <WizardStep step={2} currentStep={step}>
-                {[...forms]
-                    .sort((a, b) =>
-                        a.initiative.value < b.initiative.value ? 1 : -1
-                    )
-                    .map((form, i) => {
-                        const info = {
-                            characterName: form.characterName.value,
-                            initiative: form.initiative.value,
-                            actions: form.actions.value,
-                        };
-                        return (
-                            <pre key={i} className="">
-                                {JSON.stringify(info, null, 2)}
-                            </pre>
-                        );
-                    })}
+                <TurnsConfirmation forms={forms} />
             </WizardStep>
         </div>
     );
@@ -165,10 +173,8 @@ export default function Wizard() {
             const errors = [];
             for (let i = 0; i < forms.length; i++) {
                 const form = forms[i];
-                console.log(form);
                 for (const key in form) {
                     if (!form[key].isValid) {
-                        console.log(form[key]);
                         errors.push(`Linea ${i + 1}: ${form[key].errorMsg}`);
                     }
                 }
@@ -178,6 +184,20 @@ export default function Wizard() {
                 alert('Hay errores en el formulario\n\n' + errors.join('\n'));
                 return;
             }
+        } else if (step === 2) {
+            dispatchTurns({
+                type: 'init',
+                contextState: {
+                    turns: forms.map((formData) => ({
+                        actions: formData.actions.value,
+                        characterName: formData.characterName.value,
+                        initiative: formData.initiative.value,
+                        incapacitated: false,
+                        turnState: TurnState.WAITING,
+                    })),
+                } as TurnsState,
+            });
+            router.push('/');
         }
 
         setStep((s) => s + 1);
@@ -198,7 +218,6 @@ export default function Wizard() {
 
     function updateForm(index: number, key: string, value: any) {
         const newForms = [...forms];
-        console.log(newForms, forms);
 
         const control = newForms[index][key];
 

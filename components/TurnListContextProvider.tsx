@@ -54,7 +54,12 @@ function turnListReducer(
 
     switch (action.type) {
         case 'init': {
-            newState = { ...action.contextState };
+            newState = {
+                turnIndex: -1,
+                roundIndex: -1,
+                lastInitiative: 0,
+                ...action.contextState,
+            };
             break;
         }
 
@@ -139,6 +144,7 @@ function turnListReducer(
         }
 
         case 'agregar': {
+            console.log('agregar called');
             newState = {
                 ...turnState,
                 turns: [...turnState.turns],
@@ -248,7 +254,7 @@ interface TurnsAction {
     turns?: Turn[];
     turnAction?: TurnAction;
     turnId?: string;
-    contextState?: TurnListStateContextValue;
+    contextState?: TurnsState;
 }
 
 type TurnsActionType =
