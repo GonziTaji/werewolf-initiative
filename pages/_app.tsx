@@ -1,7 +1,12 @@
-import "../styles/globals.css";
+import TurnListContextProvider from '../components/TurnListContextProvider';
+import '../styles/globals.css';
 
 function MyApp({ Component, pageProps }) {
-    return <Component {...pageProps} />;
+    return (
+        <TurnListContextProvider>
+            <Component {...pageProps} />
+        </TurnListContextProvider>
+    );
 }
 
 export default MyApp;

@@ -1,8 +1,9 @@
+import { useRouter } from 'next/router';
 import { useTurns } from '../hooks/useTurns';
 
 export default function EndButton() {
     const { turns, dispatchTurns } = useTurns();
-
+    const router = useRouter();
     return (
         <button
             className={`
@@ -29,7 +30,7 @@ export default function EndButton() {
         const response = confirm(message);
 
         if (response) {
-            dispatchTurns({ type: 'limpiar' });
+            router.push('/').then(() => dispatchTurns({ type: 'limpiar' }));
         }
     }
 }

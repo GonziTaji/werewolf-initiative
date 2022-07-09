@@ -1,41 +1,46 @@
 import { useEffect, useState } from 'react';
+import { FaCaretRight, FaCaretUp } from 'react-icons/fa';
 import { useTurns } from '../hooks/useTurns';
 import CharacterForm from './CharacterForm';
 import Collapsable from './Collapsable';
 
 export default function CharacterFormContainer() {
-    const { roundIndex } = useTurns();
-    const [show, setShow] = useState(true);
+    const { turns } = useTurns();
+    const [show, setShow] = useState(false);
+    const [previousTurnsCount, setPreviousTurnsCount] = useState(turns.length);
 
     useEffect(() => {
-        if (roundIndex === 0) {
+        if (previousTurnsCount !== turns.length) {
             setShow(false);
-        } else if (roundIndex === -1) {
-            setShow(true);
+            setPreviousTurnsCount(turns.length);
         }
-    }, [roundIndex]);
+    }, [turns]);
 
     return (
-        <>
-            <div className="mt-2 px-4 pb-0">
-                <div className="flex justify-between content-center">
-                    <h2 className="col-span-2 text-xl">Ingreso de personaje</h2>
-
-                    <button
-                        className="underline text-cyan-600"
-                        type="button"
-                        onClick={() => setShow(!show)}
-                    >
-                        {show ? 'Esconder' : 'Mostrar'}
-                    </button>
-                </div>
-
-                <Collapsable className={show ? 'mt-3' : ''} collapsed={!show}>
-                    <CharacterForm />
-                </Collapsable>
+        <div className="px-2">
+            <div className="flex content-center">
+                <button
+                    className="text-cyan-600 grow"
+                    type="button"
+                    onClick={() => setShow(!show)}
+                >
+                    <h2 className="inline w-full text-xl">
+                        Agregar personaje
+                        <span className="pl-4 h-full">
+                            <FaCaretRight
+                                className={
+                                    'transition h-full inline' +
+                                    (show ? ' rotate-90' : '')
+                                }
+                            />
+                        </span>
+                    </h2>
+                </button>
             </div>
 
-            <hr className="h-1 my-2 bg-rose-800" />
-        </>
+            <Collapsable className={show ? 'mt-3' : ''} collapsed={!show}>
+                <CharacterForm />
+            </Collapsable>
+        </div>
     );
 }

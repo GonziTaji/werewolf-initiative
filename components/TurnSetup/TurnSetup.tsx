@@ -1,8 +1,11 @@
+import router from 'next/router';
 import { useState } from 'react';
 import { FaCaretLeft, FaCaretRight } from 'react-icons/fa';
 import { useTurns } from '../../hooks/useTurns';
-import { SimpleCharacterFormData } from '../../interfaces';
-import ActorsCountForm from './ActorsCountForm';
+import { SimpleCharacterFormData, TurnData } from '../../interfaces';
+import { TurnState } from '../../types';
+import PageHeader from '../PageHeader';
+import { TurnsState } from '../TurnListContextProvider';
 import SimpleCharacterForm from './SimpleCharacterForm';
 
 export default function TurnSetup() {
@@ -14,44 +17,26 @@ export default function TurnSetup() {
 
     return (
         <>
-            <div className="sticky top-0 shadow-md">
-                <h1 className="text-xl text-center">Comenzando Encuentro</h1>
-
-                <div
-                    className="grid grid-cols-2 border border-black bg-teal-100 px-3"
-                    style={{ height: '5rem' }}
-                >
+            <PageHeader title="Nuevo encuentro">
+                <div className="grid grid-cols-2">
                     <button
-                        onClick={() => alert('en construcción')}
-                        className="text-left  h-full"
+                        className="text-left"
+                        onClick={() => router.push('/')}
                     >
                         <FaCaretLeft className="inline" />
                         Atrás
                         <small className="block px-2">Menú</small>
                     </button>
 
-                    <button
-                        onClick={() => alert('Not implemented')}
-                        className="text-right h-full"
-                    >
+                    <button onClick={startEncounter} className="text-right">
                         Siguiente
                         <FaCaretRight className="inline" />
                         <small className="block px-2">Comenzar encuentro</small>
                     </button>
                 </div>
-            </div>
+            </PageHeader>
 
-            <div className="text-center shadow border border-black my-5 py-2 pb-5">
-                <h1 className="pb-6 text-xl max-w-md mx-auto">
-                    Numero de participantes
-                </h1>
-                <ActorsCountForm
-                    participantsCount={forms.length}
-                    setParticipantsCount={updateFormCount}
-                />
-            </div>
-
-            <div className="shadow border border-black my-5 py-2 pb-5">
+            <div className="shadow border border-black my-5 py-2 pb-5 min-h-[]">
                 <div className="text-center block my-5">
                     <h1 className="text-xl px-5">Info de Participantes</h1>
                 </div>
@@ -69,6 +54,10 @@ export default function TurnSetup() {
                         />
                     ))}
                 </div>
+
+                <small className="block text-xs italic pl-4 pt-2">
+                    Al llenar el nombre y aparecerá otra fila
+                </small>
             </div>
         </>
     );
@@ -101,7 +90,41 @@ export default function TurnSetup() {
         const newForms = forms.map((form, i) =>
             i === index ? { ...newForm } : { ...form }
         );
+
         setForms(newForms);
+        console.log(newForms[newForms.length - 1]);
+        if (newForms[newForms.length - 1].characterName.value) {
+            console.log('in');
+            updateFormCount(newForms.length + 1);
+        }
+    }
+
+    function startEncounter() {
+        const newTurns = forms
+            .filter((formData) => formData.characterName.isValid)
+            .map((formData) => ({
+                id: Math.random().toFixed(20).split('.')[1],
+                actions: formData.actions.value,
+                characterName: formData.characterName.value,
+                initiative: formData.initiative.value,
+                incapacitated: false,
+                turnState: TurnState.WAITING,
+                actionsRemaining: formData.actions.value,
+            }));
+
+        if (newTurns.length === 0) {
+            alert('Al menos agregue el nombre de un personaje');
+            return;
+        }
+
+        dispatchTurns({
+            type: 'init',
+            contextState: {
+                turns: newTurns,
+            } as TurnsState,
+        });
+        dispatchTurns({ type: 'comenzar' });
+        router.push('/encounter');
     }
 }
 

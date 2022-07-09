@@ -55,10 +55,13 @@ function turnListReducer(
     switch (action.type) {
         case 'init': {
             newState = {
-                turnIndex: -1,
-                roundIndex: -1,
+                turnIndex: 0,
+                roundIndex: 0,
                 lastInitiative: 0,
                 ...action.contextState,
+                turns: [...action.contextState.turns].sort((a, b) =>
+                    a.initiative < b.initiative ? 1 : -1
+                ),
             };
             break;
         }

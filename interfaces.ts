@@ -2,9 +2,9 @@ import { ReactElement, ReactNode } from 'react';
 import { TurnState } from './types';
 
 export interface Turn extends TurnData {
-    id?: string;
     turnState: TurnState;
     incapacitated: boolean;
+    actionsRemaining: number;
 }
 
 export interface PartialTurn {
@@ -25,6 +25,7 @@ export interface InitiativeFormData extends TurnData {
 }
 
 export interface TurnData extends PartialTurn {
+    id?: string;
     characterName: string;
     initiative: number;
     actions: number;
