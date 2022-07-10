@@ -14,7 +14,7 @@ export default function CharacterFormContainer() {
             setShow(false);
             setPreviousTurnsCount(turns.length);
         }
-    }, [turns]);
+    }, [turns, previousTurnsCount]);
 
     return (
         <div className="px-2">

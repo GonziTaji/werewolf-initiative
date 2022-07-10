@@ -59,14 +59,13 @@ export default function TurnFormModal({ show, hide }: TurnFormModalProps) {
 
                     <br />
                     <div className="flex justify-between">
-                        <SubmitFormButton
-                            onClick={submitTurn}
-                            children="Agregar y Cerrar"
-                        />
-                        <SubmitFormButton
-                            onClick={submitTurnAndCreateNew}
-                            children="Agregar y Crear Otro"
-                        />
+                        <SubmitFormButton onClick={submitTurn}>
+                            Agregar y Cerrar
+                        </SubmitFormButton>
+
+                        <SubmitFormButton onClick={submitTurnAndCreateNew}>
+                            Agregar y Crear Otro
+                        </SubmitFormButton>
                     </div>
                 </div>
             </div>
