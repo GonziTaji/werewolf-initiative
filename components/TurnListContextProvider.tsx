@@ -100,13 +100,15 @@ function turnListReducer(
         case 'modificar': {
             newState = {
                 ...turnState,
-                turns: turnState.turns.map((t, i) => {
-                    if (t.id === action.turnId) {
-                        return doTurnAction(t, action.turnAction);
-                    }
+                turns: turnState.turns
+                    .map((t) => {
+                        if (t.id === action.turnId) {
+                            return doTurnAction(t, action.turnAction);
+                        }
 
-                    return { ...t };
-                }),
+                        return { ...t };
+                    })
+                    .filter((t) => t),
             };
 
             const noActing = newState.turns.every(
@@ -235,6 +237,9 @@ function doTurnAction(turn: Turn, action: TurnAction) {
         case 'capacitar':
             newTurn.incapacitated = false;
             break;
+
+        case 'eliminar':
+            return null;
     }
 
     return newTurn;
@@ -273,4 +278,5 @@ export type TurnAction =
     | 'guardar'
     | 'usarTurno'
     | 'incapacitar'
-    | 'capacitar';
+    | 'capacitar'
+    | 'eliminar';

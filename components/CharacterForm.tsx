@@ -1,9 +1,16 @@
-import { Fragment, SyntheticEvent, useState } from 'react';
-import { useTurns } from '../hooks/useTurns';
-import { TurnState } from '../types';
+import { Fragment, SyntheticEvent } from 'react';
 import Input from './Input';
-interface CharacterFormProps {}
+interface CharacterFormProps {
+    formData: CharacterFormData;
+    setFormData: (formData: CharacterFormData) => void;
+}
 
+interface CharacterFormData {
+    characterName: FormControlData<string>;
+    initiative: FormControlData<number>;
+    actions: FormControlData<number>;
+    entersActing: FormControlData<boolean>;
+}
 interface FormControlData<T> {
     value: T;
     type: string;
@@ -14,53 +21,31 @@ interface FormControlData<T> {
     validator?: (value: T) => boolean;
 }
 
-export default function CharacterForm({}: CharacterFormProps) {
-    const { dispatchTurns } = useTurns();
-    const [formData, setFormData] = useState(formDataInitialState());
+export default function CharacterForm({
+    formData,
+    setFormData,
+}: CharacterFormProps) {
+    return (
+        <form className="grid gap-y-2 grid-cols-auto-1fr">
+            {Object.entries(formData).map(([controlKey, formControl], i) => (
+                <Fragment key={i}>
+                    <label className="pr-4" htmlFor={controlKey}>
+                        {formControl.label}
+                    </label>
 
-    function submitForm() {
-        if (!isValid()) {
-            const errors = [];
-
-            for (const key in formData) {
-                if (!formData[key].isValid) {
-                    if (formData[key].errorMsg) {
-                        errors.push(formData[key].errorMsg);
-                    } else {
-                        errors.push(`Campo inválido: ${formData[key].label}`);
-                    }
-                }
-            }
-
-            alert(errors.join('\n'));
-            return;
-        }
-
-        const formValues: any = {
-            turnState: formData.entersActing.value
-                ? TurnState.ACTING
-                : TurnState.WAITING,
-            actionsRemaining: 0,
-            incapacitated: false,
-        };
-
-        for (const key in formData) {
-            formValues[key] = formData[key].value;
-        }
-
-        dispatchTurns({ type: 'agregar', turns: [formValues] });
-        setFormData(formDataInitialState());
-    }
-
-    function isValid() {
-        for (const key in formData) {
-            if (!formData[key].isValid) {
-                return false;
-            }
-        }
-
-        return true;
-    }
+                    <Input
+                        id={controlKey}
+                        className={formControl.type !== 'checkbox' && 'w-full '}
+                        type={formControl.type}
+                        value={formControl.value}
+                        onChange={inputOnChange}
+                        isValid={formControl.isValid}
+                        errorMsg={formControl.errorMsg}
+                    />
+                </Fragment>
+            ))}
+        </form>
+    );
 
     function inputOnChange(ev: SyntheticEvent<HTMLInputElement>) {
         const currentTarget = ev.currentTarget;
@@ -89,55 +74,9 @@ export default function CharacterForm({}: CharacterFormProps) {
 
         setFormData(newFormData);
     }
-
-    return (
-        <form className="grid gap-y-2 grid-cols-auto-1fr">
-            {Object.entries(formData).map(([controlKey, formControl], i) => (
-                <Fragment key={i}>
-                    <label className="pr-4" htmlFor={controlKey}>
-                        {formControl.label}
-                    </label>
-
-                    <Input
-                        id={controlKey}
-                        className={formControl.type !== 'checkbox' && 'w-full '}
-                        type={formControl.type}
-                        value={formControl.value}
-                        onChange={inputOnChange}
-                        isValid={formControl.isValid}
-                        errorMsg={formControl.errorMsg}
-                    />
-                </Fragment>
-            ))}
-
-            <button
-                className={`
-                        col-start-2
-                        justify-self-end
-                        hover:text-white
-                        text-gray-100
-                        hover:bg-green-600
-                        bg-green-700
-                        disabled:bg-green-200
-                        disabled:text-gray-500
-                        disabled:cursor-not-allowed
-                        transition-colors
-                        rounded-md
-                        py-1
-                        px-2
-                        cursor-pointer
-                        font-bold
-                    `}
-                type="button"
-                onClick={submitForm}
-            >
-                Agregar
-            </button>
-        </form>
-    );
 }
 
-const formDataInitialState = (): { [key: string]: FormControlData<any> } => ({
+export const formDataInitialState = (): CharacterFormData => ({
     characterName: {
         value: '',
         type: 'text',
@@ -171,5 +110,6 @@ const formDataInitialState = (): { [key: string]: FormControlData<any> } => ({
         label: 'Entra actuando',
         className: '',
         isValid: true,
+        errorMsg: '',
     },
 });

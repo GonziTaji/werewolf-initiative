@@ -1,3 +1,4 @@
+import { FaSkull, FaTimes } from 'react-icons/fa';
 import { useTurns } from '../hooks/useTurns';
 import { Turn } from '../interfaces';
 import { TurnState } from '../types';
@@ -8,13 +9,13 @@ interface TurnElementProps {
 }
 
 export default function TurnElement({ turn }: TurnElementProps) {
-    const { roundIndex, dispatchTurns } = useTurns();
+    const { turns, roundIndex, dispatchTurns } = useTurns();
 
     let containerBg = '';
 
     switch (turn.turnState) {
         case TurnState.ACTING:
-            containerBg = turn.incapacitated ? 'bg-pink-800' : 'bg-blue-300';
+            containerBg = turn.incapacitated ? 'bg-red-400' : 'bg-blue-300';
             break;
 
         default:
@@ -85,11 +86,11 @@ export default function TurnElement({ turn }: TurnElementProps) {
             <div className="grid grid-rows-a-2">
                 <div
                     className={
-                        'grid grid-cols-[auto_1fr_auto] space-x-2 pb-1' +
+                        'grid grid-cols-[auto_1fr_auto_auto] space-x-2 pb-1' +
                         (turn.isOwnTurn ? '  font-bold' : '')
                     }
                 >
-                    <span className={'px-2'}>{turn.initiative}</span>
+                    <span className="px-2">{turn.initiative}</span>
 
                     <span className="grow px-2 overflow-hidden overflow-ellipsis whitespace-nowrap">
                         {turn.characterName.toUpperCase()}
@@ -98,17 +99,21 @@ export default function TurnElement({ turn }: TurnElementProps) {
                     <span className="px-2">
                         {turn.actionsRemaining}/{turn.actions}
                     </span>
+
+                    <button
+                        hidden={!turn.incapacitated}
+                        onClick={() => deleteTurn(turn)}
+                        className="px-2 border-black/25 border rounded-xl bg-rose-700/40"
+                    >
+                        <FaSkull className="h-full text-black/75" />
+                    </button>
                 </div>
 
                 <div className="grid grid-cols-4">
                     {Object.values(buttonProps)
                         .filter((p) => !p.hidden)
-                        .map(({ disabled, ...props }, i) => (
-                            <ActionButton
-                                key={i}
-                                {...props}
-                                disabled={roundIndex < 0 || disabled}
-                            >
+                        .map((props, i) => (
+                            <ActionButton key={i} {...props}>
                                 <span className="text-xs">
                                     {props.label.toUpperCase()}
                                 </span>
@@ -118,6 +123,19 @@ export default function TurnElement({ turn }: TurnElementProps) {
             </div>
         </div>
     );
+
+    function deleteTurn(turn: Turn) {
+        const message = `¿Matar a ${turn.characterName.toUpperCase()}?`;
+        const response = confirm(message);
+
+        if (!response) return;
+
+        dispatchTurns({
+            type: 'modificar',
+            turnId: turn.id,
+            turnAction: 'eliminar',
+        });
+    }
 }
 
 function ActionButton({

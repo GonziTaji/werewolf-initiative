@@ -1,66 +1,91 @@
 import { useRouter } from 'next/router';
-import { FaCaretLeft, FaCaretRight } from 'react-icons/fa';
-import CharacterFormContainer from '../components/CharacterFormContainer';
+import { useEffect, useState } from 'react';
+import { FaCaretDown } from 'react-icons/fa';
+import Collapsable from '../components/Collapsable';
 import PageHeader from '../components/PageHeader';
-import RoundInfo from '../components/RoundInfo';
+import TurnFormModal from '../components/TurnFormModal';
 import TurnList from '../components/TurnList';
 import { useTurns } from '../hooks/useTurns';
 
 export default function Home() {
     const router = useRouter();
     const { dispatchTurns, turnIndex, roundIndex } = useTurns();
+    const [showHeader, setShowHeader] = useState(true);
+    const [showFormModal, setShowFormModal] = useState(false);
+
+    // Feedback for the user. This way the user sees the menu collapsing
+    // and can infer that it can be shown.
+    useEffect(() => {
+        setTimeout(() => {
+            setShowHeader(false);
+        }, 400);
+    }, []);
 
     return (
         <>
-            <div className="m-auto max-w-4xl">
-                <PageHeader title="Encuentro">
-                    <div
-                        className="grid"
-                        style={{
-                            gridTemplateColumns: '1fr auto 1fr',
-                        }}
-                    >
-                        <button
-                            className="text-left"
-                            onClick={() => router.push('/')}
-                        >
-                            <FaCaretLeft className="inline" />
-                            Atrás
-                            <small className="block px-2">Menú principal</small>
-                        </button>
+            <div className="sticky top-0">
+                <button
+                    className="bg-white w-full text-xl text-center"
+                    onClick={() => setShowHeader(!showHeader)}
+                >
+                    Encuentro
+                    <FaCaretDown
+                        className={
+                            'duration-300 transition h-full inline' +
+                            (showHeader ? ' -rotate-180' : '')
+                        }
+                    />
+                </button>
 
-                        <div className="text-center border-x px-2 border-black/25">
-                            <span className="block">
-                                Turno: {turnIndex + 1}
-                            </span>
-                            <span>Ronda: {roundIndex + 1}</span>
+                <Collapsable collapsed={!showHeader}>
+                    <PageHeader title="">
+                        <div className="flex justify-between">
+                            <div>
+                                <span>Turno: {turnIndex + 1} | </span>
+                                <span>Ronda: {roundIndex + 1}</span>
+                                <button
+                                    onClick={() => setShowFormModal(true)}
+                                    className="text-cyan-800 underline block"
+                                >
+                                    Agregar turno
+                                </button>
+                            </div>
+
+                            <div className="text-right">
+                                <button
+                                    className="text-cyan-800 underline block"
+                                    onClick={() => router.push('/')}
+                                >
+                                    Menú principal
+                                </button>
+
+                                <button
+                                    onClick={finalizarEncuentro}
+                                    className="text-cyan-800 underline block"
+                                >
+                                    Finalizar encuentro
+                                </button>
+                            </div>
                         </div>
+                    </PageHeader>
 
-                        <button
-                            onClick={finalizarEncuentro}
-                            className="text-right"
-                        >
-                            Terminar
-                            <FaCaretRight className="inline" />
-                            <small className="block px-2">
-                                Finalizar encuentro
-                            </small>
-                        </button>
-                    </div>
-                </PageHeader>
-
-                <CharacterFormContainer />
-
-                <TurnList />
+                    <br />
+                </Collapsable>
             </div>
+
+            <TurnList />
+
+            <TurnFormModal
+                hide={() => setShowFormModal(false)}
+                show={showFormModal}
+            />
         </>
     );
 
     function finalizarEncuentro() {
-        const response = confirm(`
-            ¿Desea terminar el encuentro?
-            \n\nEsta acción es irreversible
-        `);
+        const response = confirm(
+            '¿Desea terminar el encuentro?\n\nEsta acción es irreversible'
+        );
 
         if (response) {
             router.push('/').then(() => dispatchTurns({ type: 'limpiar' }));

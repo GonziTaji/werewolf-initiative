@@ -39,7 +39,7 @@ export default function CharacterFormContainer() {
             </div>
 
             <Collapsable className={show ? 'mt-3' : ''} collapsed={!show}>
-                <CharacterForm />
+                {/* <CharacterForm /> */}
             </Collapsable>
         </div>
     );
