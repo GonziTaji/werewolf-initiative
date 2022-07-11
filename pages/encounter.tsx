@@ -80,6 +80,7 @@ export default function Home() {
                             <span className="whitespace-nowrap overflow-auto">
                                 {playing.map(({ name, acting }, i, a) => (
                                     <span
+                                        key={i}
                                         className={`font-bold  ${
                                             acting ? '' : 'text-black/40'
                                         }`}
