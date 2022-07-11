@@ -1,5 +1,5 @@
 import { useMemo } from 'react';
-import { SimpleCharacterFormData } from '../../interfaces';
+import { SimpleCharacterFormData } from '../../../interfaces';
 
 interface TurnsConfirmationProps {
     forms?: SimpleCharacterFormData[];

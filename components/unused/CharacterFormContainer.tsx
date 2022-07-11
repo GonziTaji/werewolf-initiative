@@ -1,8 +1,7 @@
 import { useEffect, useState } from 'react';
-import { FaCaretRight, FaCaretUp } from 'react-icons/fa';
-import { useTurns } from '../hooks/useTurns';
-import CharacterForm from './CharacterForm';
-import Collapsable from './Collapsable';
+import { FaCaretRight } from 'react-icons/fa';
+import { useTurns } from '../../hooks/useTurns';
+import Collapsable from '../Collapsable';
 
 export default function CharacterFormContainer() {
     const { turns } = useTurns();

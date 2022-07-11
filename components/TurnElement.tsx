@@ -1,15 +1,17 @@
-import { FaSkull, FaTimes } from 'react-icons/fa';
+import { useEffect } from 'react';
+import { useRef, useState } from 'react';
+import { FaSkull } from 'react-icons/fa';
 import { useTurns } from '../hooks/useTurns';
 import { Turn } from '../interfaces';
+import { TurnAction } from '../reducers/turnListReducer';
 import { TurnState } from '../types';
-import { TurnAction } from './TurnListContextProvider';
 
 interface TurnElementProps {
     turn: Turn;
 }
 
 export default function TurnElement({ turn }: TurnElementProps) {
-    const { turns, roundIndex, dispatchTurns } = useTurns();
+    const { dispatchTurns } = useTurns();
 
     let containerBg = '';
 

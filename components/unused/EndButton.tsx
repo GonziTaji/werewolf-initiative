@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useTurns } from '../hooks/useTurns';
+import { useTurns } from '../../hooks/useTurns';
 
 export default function EndButton() {
     const { turns, dispatchTurns } = useTurns();

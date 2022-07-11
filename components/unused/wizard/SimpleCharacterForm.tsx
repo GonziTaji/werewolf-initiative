@@ -1,5 +1,5 @@
-import { SimpleCharacterFormData, Turn } from '../../interfaces';
-import Input from '../Input';
+import { SimpleCharacterFormData, Turn } from '../../../interfaces';
+import Input from '../../Input';
 
 interface SimpleCharacterFormProps {
     form: SimpleCharacterFormData;

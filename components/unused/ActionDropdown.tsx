@@ -1,6 +1,6 @@
-import { MutableRefObject, useRef, useState } from 'react';
-import useEvent from '../hooks/useEvent';
-import { ComponentBaseProps } from '../interfaces';
+import { useRef, useState } from 'react';
+import useEvent from '../../hooks/useEvent';
+import { ComponentBaseProps } from '../../interfaces';
 
 interface ActionDropdownProps extends ComponentBaseProps {}
 

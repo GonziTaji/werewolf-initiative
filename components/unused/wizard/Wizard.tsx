@@ -1,14 +1,14 @@
-import { useTurns } from '../../hooks/useTurns';
+import { useTurns } from '../../../hooks/useTurns';
 import NumberOfParticipantsForm from './NumberOfParticipantsForm';
-import { SimpleCharacterFormData } from '../../interfaces';
+import { SimpleCharacterFormData } from '../../../interfaces';
 import { useMemo, useState } from 'react';
 import { FaCaretLeft, FaCaretRight } from 'react-icons/fa';
-import Input from '../Input';
+import Input from '../../Input';
 import TurnsConfirmation from './TurnsConfirmation';
 import maincss from '../../styles/main.module.css';
 import { useRouter } from 'next/router';
-import { TurnState } from '../../types';
-import { TurnsState } from '../TurnListContextProvider';
+import { TurnState } from '../../../types';
+import { TurnsState } from '../../../reducers/turnListReducer';
 
 const stepNames = [
     'Cantidad de participantes',

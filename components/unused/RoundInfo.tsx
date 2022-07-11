@@ -1,13 +1,8 @@
-import { useTurns } from '../hooks/useTurns';
+import { useTurns } from '../../hooks/useTurns';
 import EndButton from './EndButton';
-import StartButton from './StartButton';
 
 export default function RoundInfo() {
-    const { roundsStarted, turnIndex, roundIndex } = useTurns();
-
-    if (!roundsStarted) {
-        return <StartButton />;
-    }
+    const { turnIndex, roundIndex } = useTurns();
 
     return (
         <div className="flex gap-4 items-center">

@@ -2,14 +2,14 @@ import router from 'next/router';
 import { useState } from 'react';
 import { FaCaretLeft, FaCaretRight } from 'react-icons/fa';
 import { useTurns } from '../../hooks/useTurns';
-import { SimpleCharacterFormData, TurnData } from '../../interfaces';
+import { SimpleCharacterFormData } from '../../interfaces';
 import { TurnState } from '../../types';
 import PageHeader from '../PageHeader';
-import { TurnsState } from '../TurnListContextProvider';
+
 import SimpleCharacterForm from './SimpleCharacterForm';
 
 export default function TurnSetup() {
-    const { turns, dispatchTurns } = useTurns();
+    const { dispatchTurns } = useTurns();
     const [forms, setForms] = useState([initialFormData()]);
     const [deletedForms, setDeletedForms] = useState(
         [] as SimpleCharacterFormData[]
@@ -17,7 +17,7 @@ export default function TurnSetup() {
 
     return (
         <>
-            <PageHeader title="Nuevo encuentro">
+            <PageHeader title="Nuevo encuentro" className="sticky top-0">
                 <div className="grid grid-cols-2">
                     <button
                         className="text-left"
@@ -103,7 +103,6 @@ export default function TurnSetup() {
         const newTurns = forms
             .filter((formData) => formData.characterName.isValid)
             .map((formData) => ({
-                id: Math.random().toFixed(20).split('.')[1],
                 actions: formData.actions.value,
                 characterName: formData.characterName.value,
                 initiative: formData.initiative.value,
@@ -117,14 +116,9 @@ export default function TurnSetup() {
             return;
         }
 
-        dispatchTurns({
-            type: 'init',
-            contextState: {
-                turns: newTurns,
-            } as TurnsState,
-        });
-        dispatchTurns({ type: 'comenzar' });
-        router.push('/encounter');
+        router
+            .push('/encounter')
+            .then(() => dispatchTurns({ type: 'comenzar', turns: newTurns }));
     }
 }
 

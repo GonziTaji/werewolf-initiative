@@ -1,4 +1,4 @@
-import Input from '../Input';
+import Input from '../../Input';
 import { FaPlus, FaMinus } from 'react-icons/fa';
 
 interface NumberOfParticipantsFormProps {

@@ -1,5 +1,5 @@
 import { useRouter } from 'next/router';
-import { useEffect, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { FaCaretDown } from 'react-icons/fa';
 import Collapsable from '../components/Collapsable';
 import PageHeader from '../components/PageHeader';
@@ -9,9 +9,18 @@ import { useTurns } from '../hooks/useTurns';
 
 export default function Home() {
     const router = useRouter();
-    const { dispatchTurns, turnIndex, roundIndex } = useTurns();
+    const { dispatchTurns, roundIndex, turns, lastInitiative } = useTurns();
     const [showHeader, setShowHeader] = useState(true);
     const [showFormModal, setShowFormModal] = useState(false);
+
+    const playing = useMemo(() => {
+        return turns
+            .filter((t) => t.initiative === lastInitiative)
+            .map((t) => ({
+                name: t.characterName,
+                acting: !!t.actionsRemaining,
+            }));
+    }, [turns, lastInitiative]);
 
     // Feedback for the user. This way the user sees the menu collapsing
     // and can infer that it can be shown.
@@ -41,17 +50,16 @@ export default function Home() {
                     <PageHeader title="">
                         <div className="flex justify-between">
                             <div>
-                                <span>Turno: {turnIndex + 1} | </span>
-                                <span>Ronda: {roundIndex + 1}</span>
                                 <button
                                     onClick={() => setShowFormModal(true)}
                                     className="text-cyan-800 underline block"
                                 >
                                     Agregar turno
                                 </button>
+                                <span>Ronda: {roundIndex + 1}</span>
                             </div>
 
-                            <div className="text-right">
+                            <div>
                                 <button
                                     className="text-cyan-800 underline block"
                                     onClick={() => router.push('/')}
@@ -67,6 +75,21 @@ export default function Home() {
                                 </button>
                             </div>
                         </div>
+                        <span className="grid grid-cols-[auto_1fr]">
+                            <span className="pr-2">Turno de:</span>
+                            <span className="whitespace-nowrap overflow-auto">
+                                {playing.map(({ name, acting }, i, a) => (
+                                    <span
+                                        className={`font-bold  ${
+                                            acting ? '' : 'text-black/40'
+                                        }`}
+                                    >
+                                        {name.toUpperCase()}
+                                        {i !== a.length - 1 && ', '}
+                                    </span>
+                                ))}
+                            </span>
+                        </span>
                     </PageHeader>
 
                     <br />
