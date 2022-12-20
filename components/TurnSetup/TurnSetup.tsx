@@ -56,7 +56,7 @@ export default function TurnSetup() {
                 </div>
 
                 <small className="block text-xs italic pl-4 pt-2">
-                    Al llenar el nombre y aparecerá otra fila
+                    Al llenar el nombre aparecerá otra fila
                 </small>
             </div>
         </>
