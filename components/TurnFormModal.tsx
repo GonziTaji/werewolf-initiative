@@ -59,6 +59,7 @@ export default function TurnFormModal({ show, hide }: TurnFormModalProps) {
 
                     <br />
                     <div className="flex justify-between">
+                        <p>{formData.entersActing.value}</p>
                         <SubmitFormButton onClick={submitTurn}>
                             Agregar y Cerrar
                         </SubmitFormButton>
@@ -97,10 +98,13 @@ export default function TurnFormModal({ show, hide }: TurnFormModalProps) {
             characterName: formData.characterName.value,
             actions: formData.actions.value,
             initiative: formData.initiative.value,
-            turnState: formData.entersActing.value
-                ? TurnState.ACTING
-                : TurnState.WAITING,
+            turnState: TurnState.WAITING,
         };
+
+        if (formData.entersActing.value) {
+            newTurn.turnState = TurnState.ACTING;
+            newTurn.actionsRemaining = newTurn.actions;
+        }
 
         dispatchTurns({ type: 'agregar', turns: [newTurn] });
         return true;
