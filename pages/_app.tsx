@@ -1,11 +1,16 @@
 import TurnListContextProvider from '../components/TurnListContextProvider';
 import '../styles/globals.css';
+//---Juan
+import { ThemeProvider } from '@mui/material';
+import { theme } from '../utils';
 
 function MyApp({ Component, pageProps }) {
     return (
-        <TurnListContextProvider>
-            <Component {...pageProps} />
-        </TurnListContextProvider>
+        <ThemeProvider theme={theme}>
+            <TurnListContextProvider>
+                <Component {...pageProps} />
+            </TurnListContextProvider>
+        </ThemeProvider>
     );
 }
 

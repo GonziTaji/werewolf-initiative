@@ -2,6 +2,8 @@ import { useRouter } from 'next/router';
 import { FaCaretRight } from 'react-icons/fa';
 import PageHeader from '../components/PageHeader';
 import { useTurns } from '../hooks/useTurns';
+//---- Juan
+import Layout from "../components/Layout/Layout"
 
 export default function Home() {
     const router = useRouter();
@@ -36,27 +38,29 @@ export default function Home() {
     ];
 
     return (
-        <div className="">
-            <PageHeader title="Menú principal">
-                <ul className="">
-                    {menuItemProps.map((link, i) => (
-                        <MenuItem key={i} {...link} />
-                    ))}
-                </ul>
-            </PageHeader>
-            <div className="sticky top-0 shadow-md"></div>
+        <Layout>
+            <section className="">
+                <PageHeader title="Menú principal">
+                    <ul className="">
+                        {menuItemProps.map((link, i) => (
+                            <MenuItem key={i} {...link} />
+                        ))}
+                    </ul>
+                </PageHeader>
+                <div className="sticky top-0 shadow-md"></div>
 
-            <div className="px-2 pt-4">
-                <h2 className="text-lg">Accesos directos</h2>
-                <ul className="list-disc">
-                    <li className="bold ">
-                        <a href="https://www.wyrmfoe.com/" target="blank">
-                            <span className="underline">Wyrmfoe</span>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-        </div>
+                <div className="px-2 pt-4">
+                    <h2 className="text-lg">Accesos directos</h2>
+                    <ul className="list-disc">
+                        <li className="bold ">
+                            <a href="https://www.wyrmfoe.com/" target="blank">
+                                <span className="underline">Wyrmfoe</span>
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </section>
+        </Layout>
     );
 }
 
